@@ -1,7 +1,7 @@
 ---
 build:
   stage: build
-  image: docker:latest
+  image: crazymax/docker:latest
   services:
     - docker:dind
   variables:
@@ -10,5 +10,4 @@ build:
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    - docker build -t $TAG .
-    - docker push $TAG
+    - docker buildx build -t $TAG --push .
