@@ -1,13 +1,18 @@
 ---
 build:
   stage: build
-  image: crazymax/docker:latest
-  services:
-    - docker:dind
+  image:
+    name: moby/buildkit:latest
+    entrypoint: [""]
   variables:
-    TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
-    DOCKER_BUILDKIT: "1"
+    TAG: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}
   before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - mkdir -p ~/.docker
+    - AUTH=$(echo -n "${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}" | base64)
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$AUTH\"}}}" > ~/.docker/config.json
   script:
-    - docker buildx build -t $TAG --push .
+    - buildctl-daemonless.sh build
+      --frontend=dockerfile.v0
+      --local context=.
+      --local dockerfile=.
+      --output name=${TAG},type=image,push=true
