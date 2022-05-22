@@ -4,10 +4,11 @@ ARG KERNEL_FLAVOR=lts
 
 FROM alpine:$ALPINE_VERSION as builder
 ARG KERNEL_FLAVOR
-RUN apk add --no-cache linux-$KERNEL_FLAVOR
+RUN apk add --no-cache linux-$KERNEL_FLAVOR \
+&& mkdir -p /out/boot /out/lib \
+&& mv /boot/vmlinuz-$KERNEL_FLAVOR /out/boot/vmlinuz \
+&& mv /boot/config-$KERNEL_FLAVOR /out/boot/config \
+&& mv /lib/modules /out/lib
 
 FROM scratch
-ARG KERNEL_FLAVOR
-COPY --from=builder /boot/vmlinuz-$KERNEL_FLAVOR /boot/vmlinuz
-COPY --from=builder /boot/config-$KERNEL_FLAVOR /boot/config
-COPY --from=builder /lib/modules /lib/modules
+COPY --from=builder /out /
