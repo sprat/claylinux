@@ -1,18 +1,22 @@
 ---
+variables:
+  BUILD_TAG: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}
+
 build:
   stage: build
   image:
     name: moby/buildkit:latest
     entrypoint: [""]
-  variables:
-    TAG: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}
   before_script:
     - mkdir -p ~/.docker
     - AUTH=$(echo -n "${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}" | base64)
-    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$AUTH\"}}}" > ~/.docker/config.json
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"${AUTH}\"}}}" > ~/.docker/config.json
   script:
-    - buildctl-daemonless.sh build
-      --frontend=dockerfile.v0
-      --local context=.
-      --local dockerfile=.
-      --output name=${TAG},type=image,push=true
+    - BUILDCTL="buildctl-daemonless.sh build --frontend=dockerfile.v0 --local context=. --local dockerfile=."
+    - ${BUILDCTL} --output type=local,dest=out
+    - VERSION=$(basename out/lib/modules/*)
+    - ${BUILDCTL} --output type=image,\"name=${CI_REGISTRY_IMAGE}:latest,${CI_REGISTRY_IMAGE}:${VERSION}\",push=true
+  artifacts:
+    expire_in: 1h
+    paths:
+      - out
