@@ -1,8 +1,8 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.4
 ARG ALPINE_VERSION=latest
 ARG KERNEL_FLAVOR=lts
 
-FROM alpine:$ALPINE_VERSION as builder
+FROM alpine:$ALPINE_VERSION as packager
 ARG KERNEL_FLAVOR
 RUN apk add --no-cache linux-$KERNEL_FLAVOR \
 && mkdir -p /out/boot /out/lib \
@@ -11,4 +11,4 @@ RUN apk add --no-cache linux-$KERNEL_FLAVOR \
 && mv /lib/modules /out/lib
 
 FROM scratch
-COPY --from=builder /out /
+COPY --from=packager /out /
