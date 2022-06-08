@@ -2,7 +2,7 @@
 ARG ALPINE_VERSION=latest
 ARG KERNEL_FLAVOR=lts
 
-FROM alpine:$ALPINE_VERSION as packager
+FROM alpine:$ALPINE_VERSION AS packager
 ARG KERNEL_FLAVOR
 RUN apk add --no-cache linux-$KERNEL_FLAVOR \
 && mkdir -p /out/boot /out/lib \
