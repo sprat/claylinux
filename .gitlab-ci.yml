@@ -13,7 +13,3 @@ build:
     - ${BUILDCTL} --output type=local,dest=out
     - VERSION=$(basename out/lib/modules/*)
     - ${BUILDCTL} --output type=image,\"name=${CI_REGISTRY_IMAGE}:latest,${CI_REGISTRY_IMAGE}:${VERSION}\",push=true
-  artifacts:
-    expire_in: 1h
-    paths:
-      - out
