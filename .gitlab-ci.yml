@@ -1,7 +1,4 @@
 ---
-variables:
-  BUILD_TAG: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}
-
 build:
   stage: build
   image:
