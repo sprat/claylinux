@@ -11,28 +11,16 @@ lint:
   script:
     - grep -rlE '^#!/bin/(ba)?sh' . | xargs shellcheck
 
-.build:
+build:
   stage: build
-  image:
-    name: moby/buildkit:latest
-    entrypoint: [""]
+  services:
+    - docker:dind
+  image: docker:latest
+  variables:
+    NAMESPACE: ${CI_REGISTRY_IMAGE}
   before_script:
-    - mkdir -p ~/.docker
-    - AUTH=$(echo -n "${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}" | base64)
-    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"${AUTH}\"}}}" > ~/.docker/config.json
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
   script:
-    - buildctl-daemonless.sh build
-      --frontend=dockerfile.v0
-      --local context=${TARGET}
-      --local dockerfile=${TARGET}
-      --output type=image,name=${CI_REGISTRY_IMAGE}/${TARGET}:${CI_COMMIT_REF_NAME},push=true
+    - docker compose build
+    - docker compose push
 
-builder:
-  extends: .build
-  variables:
-    TARGET: builder
-
-alpine:
-  extends: .build
-  variables:
-    TARGET: alpine

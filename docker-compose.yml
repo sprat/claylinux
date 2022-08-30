@@ -1,0 +1,12 @@
+---
+# use "docker compose build" to build the images in parallel
+services:
+  alpine:
+    image: ${NAMESPACE:-claylinux}/alpine
+    build:
+      context: alpine
+
+  builder:
+    image: ${NAMESPACE:-claylinux}/builder
+    build:
+      context: builder
