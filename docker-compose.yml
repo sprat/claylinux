@@ -2,10 +2,8 @@
 services:
   alpine:
     image: ${NAMESPACE:-claylinux}/alpine
-    build:
-      context: alpine
+    build: alpine
 
   builder:
     image: ${NAMESPACE:-claylinux}/builder
-    build:
-      context: builder
+    build: builder
