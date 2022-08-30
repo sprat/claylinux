@@ -1,4 +1,8 @@
-FROM alpine:latest AS builder
+# syntax=docker/dockerfile:1.4
+ARG VERSION=latest
+
+# =========================================================
+FROM alpine:$VERSION AS builder
 
 # add the necessary tools to generate the OS
 RUN apk add --no-cache sfdisk dosfstools mtools syslinux xorriso
