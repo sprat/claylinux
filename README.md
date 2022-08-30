@@ -1,3 +1,3 @@
-# kernel-alpine
+# claylinux
 
-An Alpine Linux kernel to assemble a claylinux OS.
+claylinux is a toolbox to build live OS images using a Dockerfile & buildkit.
