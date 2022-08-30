@@ -13,9 +13,9 @@ lint:
 
 build:
   stage: build
+  image: docker:latest
   services:
     - docker:dind
-  image: docker:latest
   variables:
     NAMESPACE: ${CI_REGISTRY_IMAGE}
   before_script:
