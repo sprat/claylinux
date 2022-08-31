@@ -1,9 +1,0 @@
----
-services:
-  alpine:
-    image: ${NAMESPACE:-claylinux}/alpine
-    build: alpine
-
-  builder:
-    image: ${NAMESPACE:-claylinux}/builder
-    build: builder

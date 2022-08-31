@@ -20,9 +20,8 @@ build:
     NAMESPACE: ${CI_REGISTRY_IMAGE}
   before_script:
     - docker version
-    - docker compose version
+    - docker buildx version
     - echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
   script:
-    - docker compose build
-    - docker compose push
+    - docker buildx bake --push
 
