@@ -18,6 +18,7 @@ build:
     - docker:dind
   variables:
     NAMESPACE: ${CI_REGISTRY_IMAGE}
+    TAG: ${CI_COMMIT_REF_NAME}
   before_script:
     - docker version
     - docker buildx version
