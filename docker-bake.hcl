@@ -1,4 +1,4 @@
-variable "NAMESPACE" {
+variable "REPOSITORY" {
   default = "claylinux"
 }
 
@@ -12,10 +12,10 @@ group "default" {
 
 target "builder" {
     context = "builder"
-    tags = ["${NAMESPACE}/builder:${TAG}"]
+    tags = ["${REPOSITORY}/builder:${TAG}"]
 }
 
 target "alpine" {
     context = "alpine"
-    tags = ["${NAMESPACE}/alpine:${TAG}"]
+    tags = ["${REPOSITORY}/alpine:${TAG}"]
 }
