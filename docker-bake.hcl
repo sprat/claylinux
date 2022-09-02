@@ -10,6 +10,10 @@ group "default" {
     targets = ["builder", "alpine"]
 }
 
+group "all" {
+    targets = ["builder", "alpine", "test"]
+}
+
 target "builder" {
     context = "builder"
     tags = ["${REPOSITORY}/builder:${TAG}"]
@@ -18,4 +22,13 @@ target "builder" {
 target "alpine" {
     context = "alpine"
     tags = ["${REPOSITORY}/alpine:${TAG}"]
+}
+
+target "test" {
+    context = "test"
+    contexts = {
+        "system" = "target:alpine"
+        "builder" = "target:builder"
+    }
+    output = ["type=local,dest=out"]
 }
