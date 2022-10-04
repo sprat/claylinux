@@ -1,8 +1,8 @@
 # claylinux
 
-claylinux is a toolbox to build live OS images using a Dockerfile & buildkit.
+Claylinux is a toolbox to build live OS images using BuildKit & some Dockerfiles.
 
 To build the images, use:
 ```bash
-docker compose build
+docker buildx bake
 ```
