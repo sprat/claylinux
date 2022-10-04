@@ -1,0 +1,8 @@
+# emulate a recent PC with 1G RAM, booting from CDROM on our test image
+-M q35
+-m 1G
+-nographic
+-nodefaults
+-serial mon:stdio
+-boot d
+-cdrom out/claylinux.iso
