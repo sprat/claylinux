@@ -1,3 +1,4 @@
 #!/bin/sh
-docker buildx bake test || exit 1
+set -eu
+docker buildx bake test
 grep -v '^#' qemu.options | xargs qemu-system-x86_64
