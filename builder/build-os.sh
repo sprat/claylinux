@@ -13,24 +13,15 @@ SYSLINUX_DIR=/usr/share/syslinux
 prepare_os() {
 	mkdir -p $BOOT_DIR $OUTPUT_DIR
 
-	echo "Copying the kernel"
-	cp $SYSTEM_DIR/boot/kernel $BOOT_DIR
+	echo "Copying the boot directory"
+	cp -R $SYSTEM_DIR/boot/* $BOOT_DIR
 
-	echo "Generating the initramfs"
-	here=$(pwd)
-	cd $SYSTEM_DIR
-	find . -path './boot' -prune -o -print | cpio -oH newc | gzip -9 >$BOOT_DIR/initrd
-	cd "$here"
-
-	echo "Generating the syslinux config"
-	# TODO: customize the cmdline
-	cat >$BOOT_DIR/syslinux.cfg <<-EOF
-	DEFAULT linux
-	LABEL linux
-		KERNEL kernel
-		INITRD initrd
-		APPEND root=/dev/ram0 console=ttyS0
-	EOF
+	# TODO: generate a squashfs (probably)
+	# echo "Generating the initramfs"
+	# here=$(pwd)
+	# cd $SYSTEM_DIR
+	# find . -path './boot' -prune -o -print | cpio -oH newc | gzip -9 >$BOOT_DIR/initrd
+	# cd "$here"
 }
 
 # Just copy the files to the output directory

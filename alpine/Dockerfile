@@ -1,29 +1,28 @@
 # syntax=docker/dockerfile:1.4
 ARG VERSION=latest
-ARG KERNEL_FLAVOR=lts
-
-# =========================================================
 FROM alpine:$VERSION AS base
 
-# =========================================================
-FROM base AS kernel
-ARG KERNEL_FLAVOR
-RUN apk add --no-cache linux-$KERNEL_FLAVOR intel-ucode amd-ucode
-RUN mkdir -p /out/boot /out/lib \
-&&  mv /boot/vmlinuz-$KERNEL_FLAVOR /out/boot/kernel \
-&&  mv /boot/config-$KERNEL_FLAVOR /out/boot/config \
-&&  mv /boot/intel-ucode.img /boot/amd-ucode.img /out/boot \
-&&  mv /lib/modules /out/lib
-
-# ========================================
-FROM base AS system
-
-# by default, an alpine image comes with the following packages (at least in the 3.16 branch):
-# alpine-baselayout, alpine-baselayout-data, alpine-keys, apk-tools, busybox, ca-certificates-bundle, libc-utils,
-# libcrypto1.1, libssl1.1, musl, musl-utils, scanelf, ssl_client, zlib
-# ... and a default ISO install comes with alpine-base at least, which adds:
-# alpine-conf, busybox-initscripts, busybox-suid, openrc
+# This docker image will be used to generate a bootable OS image, so we must add a kernel, an initramfs and an init
+# system into it, because a docker image does not contain that normally.
+# The official Alpine Linux "profiles" used to build the official images are described in the mkimg.*.sh scripts
+# here: https://gitlab.alpinelinux.org/alpine/aports/-/tree/master/scripts
+ARG FLAVOR=lts
+RUN apk add --no-cache linux-$FLAVOR
+# TODO: we should probably merge this line with the previous one but we are in the design stage for now
 RUN apk add --no-cache alpine-base
+# TODO: ucode should be optional
+RUN apk add --no-cache intel-ucode amd-ucode
+
+# Generate the default syslinux configuration
+# add root=/dev/ram0 on the cmdline?
+ARG CONSOLE=ttyS0
+RUN KERNEL="vmlinuz-$FLAVOR" \
+ && INITRD="intel-ucode.img,amd-ucode.img,initramfs-$FLAVOR" \
+ && CMDLINE="console=$CONSOLE" \
+ && printf "DEFAULT Linux\nLABEL Linux\n  KERNEL $KERNEL\n  INITRD $INITRD\n  APPEND $CMDLINE\n" >/boot/syslinux.cfg
+
+# Setup the system
+RUN echo "claylinux" >/etc/hostname
 
 # enable some services
 # RUN rc_add() { for svc in $2; do rc-update add $svc $1; done; } \
@@ -34,6 +33,3 @@ RUN apk add --no-cache alpine-base
 
 # copy the system configuration files
 # COPY system/ /
-
-# copy the kernel & its modules
-COPY --from=kernel /out /
