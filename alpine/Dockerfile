@@ -8,9 +8,7 @@ FROM alpine:$VERSION AS base
 # The official Alpine Linux "profiles" used to build the official images are described in the mkimg.*.sh scripts
 # here: https://gitlab.alpinelinux.org/alpine/aports/-/tree/master/scripts
 ARG FLAVOR=lts
-RUN apk add --no-cache linux-$FLAVOR
-# TODO: we should probably merge this line with the previous one but we are in the design stage for now
-RUN apk add --no-cache alpine-base
+RUN apk add --no-cache linux-$FLAVOR alpine-base
 # TODO: ucode should be optional
 RUN apk add --no-cache intel-ucode amd-ucode
 
