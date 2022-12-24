@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1.4
 ARG VERSION=latest
+
 FROM alpine:$VERSION AS base
 
 # This docker image will be used to generate a bootable OS image, so we must add a kernel, an initramfs and an init
