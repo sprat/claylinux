@@ -1,5 +1,4 @@
-#!/bin/sh
-# shellcheck shell=dash
+#!/bin/bash
 set -euo pipefail
 
 BOOT_DIR=/boot
