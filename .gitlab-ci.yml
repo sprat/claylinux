@@ -1,7 +1,9 @@
 ---
 include:
   - project: 'sprat/gitlab-ci'
-    file: '/templates/shellcheck.yml'
+    file:
+      - '/templates/shellcheck.yml'
+      - '/templates/docker.yml'
 
 stages:
   - validate
@@ -11,17 +13,12 @@ shellcheck:
   extends: .shellcheck
 
 build:
-  stage: build
-  image: docker:latest
-  services:
-    - docker:dind
+  extends:
+    - .docker
+    - .docker-login-ci
   variables:
     REPOSITORY: ${CI_REGISTRY_IMAGE}
     TAG: ${CI_COMMIT_REF_NAME}
-  before_script:
-    - docker version
-    - docker buildx version
-    - echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
   script:
     - docker buildx bake --push
 
