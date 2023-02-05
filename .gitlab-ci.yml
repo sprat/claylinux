@@ -1,15 +1,14 @@
 ---
+include:
+  - project: 'sprat/gitlab-ci'
+    file: '/templates/shellcheck.yml'
+
 stages:
-  - lint
+  - validate
   - build
 
-lint:
-  stage: lint
-  image: koalaman/shellcheck-alpine:stable
-  before_script:
-    - shellcheck --version
-  script:
-    - grep -rlE '^#!/bin/(ba)?sh' . | xargs shellcheck
+shellcheck:
+  extends: .shellcheck
 
 build:
   stage: build
