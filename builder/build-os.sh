@@ -94,10 +94,10 @@ create_iso() {
 	-boot-info-table \
 	-joliet \
 	-full-iso9660-filenames \
+	-rational-rock \
+	-sysid LINUX \
 	-volid "$VOLUME_NAME" \
 	$BOOT_DIR
-	# -input-charset utf8 \
-	# -joliet-long \
 }
 
 prepare_os
