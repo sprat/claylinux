@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 docker buildx bake test
-grep -v '^#' qemu.options | xargs qemu-system-x86_64
+qemu-system-x86_64 -M q35 -m 1G -nographic -nodefaults -serial mon:stdio -boot d -cdrom out/claylinux.iso
