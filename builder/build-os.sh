@@ -84,7 +84,7 @@ create_iso() {
 	cp $SYSLINUX_DIR/ldlinux.c32 $BOOT_DIR/isolinux
 
 	# see https://wiki.syslinux.org/wiki/index.php?title=Isohybrid
-	xorriso -as mkisofs \
+	xorrisofs \
 	-output $iso_file \
 	-isohybrid-mbr $SYSLINUX_DIR/isohdpfx.bin \
 	-eltorito-catalog isolinux/boot.cat \
