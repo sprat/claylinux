@@ -79,16 +79,15 @@ create_iso() {
 
 	echo "Generating the iso image"
 
-	mkdir -p $BOOT_DIR/isolinux
-	cp $SYSLINUX_DIR/isolinux.bin $BOOT_DIR/isolinux
-	cp $SYSLINUX_DIR/ldlinux.c32 $BOOT_DIR/isolinux
+	mkdir -p $BOOT_DIR/syslinux
+	cp $SYSLINUX_DIR/isolinux.bin $SYSLINUX_DIR/ldlinux.c32 $BOOT_DIR/syslinux
 
 	# see https://wiki.syslinux.org/wiki/index.php?title=Isohybrid
 	xorrisofs \
 	-output $iso_file \
 	-isohybrid-mbr $SYSLINUX_DIR/isohdpfx.bin \
-	-eltorito-catalog isolinux/boot.cat \
-	-eltorito-boot isolinux/isolinux.bin \
+	-eltorito-catalog syslinux/boot.cat \
+	-eltorito-boot syslinux/isolinux.bin \
 	-no-emul-boot \
 	-boot-load-size 4 \
 	-boot-info-table \
