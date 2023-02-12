@@ -31,6 +31,17 @@ filesystem. If no `root` parameter is specified (`diskless` mode), the `nlplug-f
 `.boot_repository` file or a `apkovl` file in the block devices. If found, the init script considers it's the
 root filesystem and switch to it.
 
+In the `diskless` mode, the new root filesystem is built by installing either the `apkovl` file found by
+`nlplug-findfs` into it, or some default packages to create a minimal system (case for the Alpine CD). In this mode,
+most drivers are stored in the modloop squashfs file, and there's a boot repository contains some binary packages on
+the CD. Then, the init script `switch_root` on this new filesystem.
+
+The Alpine init script does not seem to support booting a root filesystem stored inside the initramfs: either it
+expects an apkovl overlay file (`diskless` mode), either is expects another device on which the root filesystem is
+stored (`sys` mode).
+
+I am not sure how the `data` mode works, but I guess it's a special case of the `diskless` mode.
+
 Some interesting links:
 - https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device
 - https://wiki.alpinelinux.org/wiki/PXE_boot
