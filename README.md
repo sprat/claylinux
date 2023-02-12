@@ -22,14 +22,14 @@ initrd/initramfs and kernel command-line to use.
 The Alpine's init script supports multiple boot modes: `diskless`, `data` and `sys`:
 - `sys` correspond to a classical installation on a hard disk, the system configuration persists after a reboot
 - `diskless` is used to run a system fully in RAM from a CD-ROM or USB key. Every change is lost after a reboot. In
-this mode, you can load a custom configuration of the system from a `apkovl` file.
-- `data` is similar to `diskless`, but the `/var` directory is persisted on a separate disk.
+this mode, you can load a custom configuration for the system using a `apkovl` file.
+- `data` is similar to `diskless`, but the `/var` directory is persisted on a user-defined disk.
 
 During the boot, the Alpine's init script tries to find the boot media using the `nlplug-findfs` utility
-(found in the `mkinitfs` package). This utility use the `root` parameter (if provided) to determine the device
-containing the root filesystem. If no `root` parameter is specified (`diskless` mode), the `nlplug-findfs` tries to
-find a `.boot_repository` file or a `apkovl` file in the block devices. If found, the init script considers it's the
-root filesystem and boot from it.
+(found in the `mkinitfs` package). This utility use the `root` parameter to determine the device containing the root
+filesystem. If no `root` parameter is specified (`diskless` mode), the `nlplug-findfs` tries to find a
+`.boot_repository` file or a `apkovl` file in the block devices. If found, the init script considers it's the
+root filesystem and switch to it.
 
 Some interesting links:
 - https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device
