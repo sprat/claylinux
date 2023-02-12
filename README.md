@@ -27,10 +27,9 @@ this mode, you can load a custom configuration of the system from a `apkovl` fil
 
 During the boot, the Alpine's init script tries to find the boot media using the `nlplug-findfs` utility
 (found in the `mkinitfs` package). This utility use the `root` parameter (if provided) to determine the device
-containing the final rootfs. If no `root` parameter is specified (i.e. diskless, the `nlplug-findfs` tries to find a
-
-The official Alpine ISO image does not use a `root=`  kernel parameter: it seems that the CDROM boot media is found
-because it contains a `.boot_repository` file, and the boot process continues thanks to that.
+containing the root filesystem. If no `root` parameter is specified (`diskless` mode), the `nlplug-findfs` tries to
+find a `.boot_repository` file or a `apkovl` file in the block devices. If found, the init script considers it's the
+root filesystem and boot from it.
 
 Some interesting links:
 - https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device
