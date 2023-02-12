@@ -13,7 +13,7 @@ prepare_os() {
 	mkdir -p $BOOT_DIR $OUTPUT_DIR
 
 	echo "Copying the boot directory"
-	cp -R $SYSTEM_DIR/boot/* $BOOT_DIR
+	cp -R $SYSTEM_DIR/boot/. $BOOT_DIR
 
 	# TODO: generate a squashfs (probably)
 	# echo "Generating the initramfs"
