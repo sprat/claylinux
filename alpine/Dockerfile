@@ -7,8 +7,9 @@ FROM alpine:$VERSION AS base
 # system into it, because a docker image does not contain that normally.
 # The official Alpine Linux "profiles" used to build the official images are described in the mkimg.*.sh scripts
 # here: https://gitlab.alpinelinux.org/alpine/aports/-/tree/master/scripts
+RUN apk add --no-cache alpine-base
 ARG FLAVOR=lts
-RUN apk add --no-cache linux-$FLAVOR alpine-base
+RUN apk add --no-cache linux-$FLAVOR
 # TODO: ucode should be optional
 RUN apk add --no-cache intel-ucode amd-ucode
 
