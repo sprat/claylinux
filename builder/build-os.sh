@@ -11,22 +11,13 @@ SYSLINUX_DIR=/usr/share/syslinux
 # Prepare the OS files
 prepare_os() {
 	mkdir -p $BOOT_DIR $OUTPUT_DIR
-
 	echo "Copying the boot directory"
 	cp -R $SYSTEM_DIR/boot/. $BOOT_DIR
-
-	# TODO: generate a squashfs (probably)
-	# echo "Generating the initramfs"
-	# here=$(pwd)
-	# cd $SYSTEM_DIR
-	# find . -path './boot' -prune -o -print | cpio -oH newc | gzip -9 >$BOOT_DIR/initrd
-	# cd "$here"
 }
 
 # Just copy the files to the output directory
 create_raw() {
 	echo "Copying the OS files to the output directory"
-
 	mv $BOOT_DIR/* $OUTPUT_DIR
 }
 

@@ -9,7 +9,7 @@ FROM alpine:$VERSION AS base
 # here: https://gitlab.alpinelinux.org/alpine/aports/-/tree/master/scripts
 RUN apk add --no-cache alpine-base
 ARG FLAVOR=lts
-RUN apk add --no-cache linux-$FLAVOR
+RUN apk add --no-cache linux-$FLAVOR linux-firmware-none
 # TODO: ucode should be optional
 RUN apk add --no-cache intel-ucode amd-ucode
 
@@ -31,5 +31,17 @@ RUN echo "claylinux" >/etc/hostname
 #  && rc_add default "acpid ntpd" \
 #  && rc_add shutdown "mount-ro killprocs savecache"
 
-# copy the system configuration files
-# COPY system/ /
+# RUN sed -i '/tty/d' /etc/inittab
+COPY ./init /
+# COPY ./init /usr/share/mkinitfs/initramfs-init
+# RUN KERNEL_VERSION=$(basename $(ls -d /lib/modules/*)) \
+# && mkinitfs $KERNEL_VERSION
+
+# echo "Generating the initramfs"
+RUN find / -path /boot -prune -o -xdev -print | cpio -oH newc | gzip -9 >/boot/initramfs-$FLAVOR
+
+# ENTRYPOINT ["/sbin/init"]
+
+# ================================================================
+FROM base AS system
+

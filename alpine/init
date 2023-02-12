@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eux
+sysroot=/sysroot
+bb=/bin/busybox
+$bb mkdir -p $sysroot
+$bb mount -t tmpfs root $sysroot
+$bb find /* ! -path $sysroot -maxdepth 0 -print0 | $bb xargs -0 $bb cp -a -t $sysroot /*
+# pivot_root does not work if the rootfs is a ramfs/tmpfs, so we switch root on another tmpfs as a workaround
+exec $bb switch_root $sysroot /sbin/init "$@"
