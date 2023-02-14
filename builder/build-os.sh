@@ -13,6 +13,11 @@ prepare_os() {
 	mkdir -p $BOOT_DIR $OUTPUT_DIR
 	echo "Copying the boot directory"
 	cp -R $SYSTEM_DIR/boot/. $BOOT_DIR
+
+	echo "Generating the initramfs"
+	pushd $SYSTEM_DIR >/dev/null
+	find . -path './boot' -prune -o -print | sort | cpio -oH newc | gzip -9 >$BOOT_DIR/initramfs
+	popd >/dev/null
 }
 
 # Just copy the files to the output directory
