@@ -12,6 +12,8 @@ To build the claylinux images, use:
 docker buildx bake
 ```
 
+### Linux boot
+
 The Linux boot process is the following:
 1. The BIOS starts and tries to find a bootable device, respecting the boot order configuration in the BIOS. It looks
 in the MBR part of each bootable device (first 512 bytes) in order to find a bootloader, i.e. a particular signature
@@ -22,6 +24,8 @@ executes the second-stage bootloader found on this partition.
 initrd/initramfs and kernel's command-line to use.
 4. The kernel is started, then it runs the `/init` script found in the initramfs
 5. The init script tries to find & mount the final OS root filesystem and `switch_root` on it.
+
+### Alpine Linux init
 
 The Alpine's init script supports multiple boot modes: `diskless`, `data` and `sys`:
 - `sys` correspond to a classical installation on a hard disk, the system configuration persists after a reboot
@@ -46,7 +50,7 @@ stored (`sys` mode).
 
 I am not sure how the `data` mode works, but I guess it's a special case of the `diskless` mode.
 
-Some interesting links:
+Here are some interesting links about the Alpine Linux' boot:
 - https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device
 - https://wiki.alpinelinux.org/wiki/PXE_boot
 - https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper#Upgrading_.22diskless.22_and_.22data.22_disk_mode_installs
