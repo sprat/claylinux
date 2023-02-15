@@ -12,15 +12,16 @@ To build the claylinux images, use:
 docker buildx bake
 ```
 
-The boot process of a Linux system is the following:
+The Linux boot process is the following:
 1. The BIOS starts and tries to find a bootable device, respecting the boot order configuration in the BIOS. It looks
-in the MBR part of each device (first 512 bytes) in order to find a bootloader (i.e. a particular signature in the MBR).
-2. The first-stage bootloader (from e.g. syslinux, grub) tries to find a partition with the `boot` flag. If found, it
-executes the second-stage bootloader.
+in the MBR part of each bootable device (first 512 bytes) in order to find a bootloader, i.e. a particular signature
+in the MBR.
+2. The first-stage bootloader (from syslinux, grub, ...) tries to find a partition with the `boot` flag. If found, it
+executes the second-stage bootloader found on this partition.
 3. The second-stage bootloader read its configuration (e.g. `syslinux.cfg`) in order to determine the kernel,
-initrd/initramfs and kernel command-line to use.
+initrd/initramfs and kernel's command-line to use.
 4. The kernel is started, then it runs the `/init` script found in the initramfs
-5. Then the Alpine's init script tries to find & prepare the final system and `switch_root` on it.
+5. The init script tries to find & mount the final OS root filesystem and `switch_root` on it.
 
 The Alpine's init script supports multiple boot modes: `diskless`, `data` and `sys`:
 - `sys` correspond to a classical installation on a hard disk, the system configuration persists after a reboot
