@@ -1,13 +1,16 @@
 # claylinux
 
-Claylinux is a toolbox to build live OS images using BuildKit & some Dockerfiles.
+Claylinux is a toolbox to build live OS images using some Dockerfiles and BuildKit.
 
-To build the images, use:
+This project is currently a **WORK IN PROGRESS**.
+
+
+## Development notes
+
+To build the claylinux images, use:
 ```bash
 docker buildx bake
 ```
-
-## Development notes
 
 The boot process of a Linux system is the following:
 1. The BIOS starts and tries to find a bootable device, respecting the boot order configuration in the BIOS. It looks
