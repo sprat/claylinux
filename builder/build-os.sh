@@ -7,6 +7,9 @@ OUTPUT_DIR=/out
 OUTPUT_NAME=claylinux
 VOLUME_NAME=$(echo $OUTPUT_NAME | tr '[:lower:]' '[:upper:]')
 SYSLINUX_DIR=/usr/share/syslinux
+COMPRESS="pigz -9"
+# COMPRESS="xz -9 -T0"
+# COMPRESS="zstd -19 -T0"
 
 # Prepare the OS files
 prepare_os() {
@@ -14,9 +17,9 @@ prepare_os() {
 	echo "Copying the boot directory"
 	cp -R $SYSTEM_DIR/boot/. $BOOT_DIR
 
-	echo "Generating the initramfs"
 	pushd $SYSTEM_DIR >/dev/null
-	find . -path './boot' -prune -o -print | sort | cpio -oH newc | gzip -9 >$BOOT_DIR/initramfs
+	echo "Generating the initramfs"
+	find . -path './boot' -prune -o -print | sort | cpio -oH newc | $COMPRESS >$BOOT_DIR/initramfs
 	popd >/dev/null
 }
 
