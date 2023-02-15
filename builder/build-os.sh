@@ -8,7 +8,7 @@ OUTPUT_NAME=claylinux
 VOLUME_NAME=$(echo $OUTPUT_NAME | tr '[:lower:]' '[:upper:]')
 SYSLINUX_DIR=/usr/share/syslinux
 COMPRESS="pigz -9"
-# COMPRESS="xz -9 -T0"
+# COMPRESS="xz -C crc32 -9 -T0"
 # COMPRESS="zstd -19 -T0"
 
 # Prepare the OS files
