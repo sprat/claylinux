@@ -1,7 +1,8 @@
 #!/bin/sh
-set -euo pipefail
+set -eu
+# Some programs (e.g. containerd) refuse to work if / is a "rootfs" mount, as in an initramfs.
+# So, we need to copy all the files into a new tmpfs and "switch_root" to it
 mkdir -p /newroot
 mount -t tmpfs root /newroot
-find / -mindepth 1 -maxdepth 1 ! -path /newroot -print0 | xargs -0 cp -at /newroot
-# pivot_root does not work if the rootfs is a ramfs/tmpfs, so we switch root on another tmpfs as a workaround
+find / -mindepth 1 -prune ! -path /newroot -exec cp -at /newroot {} +
 exec switch_root /newroot /sbin/init "$@" || sh
