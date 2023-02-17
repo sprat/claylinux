@@ -37,8 +37,8 @@ RUN echo "$HOSTNAME" >/etc/hostname \
 && rc_add default $DEFAULT_SERVICES \
 && rc_add shutdown $SHUTDOWN_SERVICES
 
-# RUN sed -i '/tty/d' /etc/inittab \
-# ::respawn:-/bin/sh
-RUN echo "ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100" >>/etc/inittab
+# uncomment ttyS0 line
+RUN sed -i '/^#ttyS0/s/^#//g' /etc/inittab
+# RUN sed -i '/^tty/s/^/#/g' /etc/inittab && sed -i '/^#'${CONSOLE}'/s/^#//g' /etc/inittab
 
 COPY ./init /
