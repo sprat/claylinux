@@ -30,9 +30,8 @@ ARG BOOT_SERVICES="modules sysctl hostname bootmisc syslog loadkmap networking h
 ARG DEFAULT_SERVICES="firstboot acpid"
 ARG SHUTDOWN_SERVICES="mount-ro killprocs savecache"
 
-# \n\nauto eth0\niface eth0 inet dhcp
 RUN echo "$HOSTNAME" >/etc/hostname \
-&& printf "auto lo\niface lo inet loopback" >/etc/network/interfaces \
+&& printf "auto lo\niface lo inet loopback\n\nauto eth0\niface eth0 inet dhcp\n" >/etc/network/interfaces \
 && passwd -d root \
 && rc_add() { local runlevel=$1; shift; for service; do rc-update add $service $runlevel; done; } \
 && rc_add sysinit $SYSINIT_SERVICES \
