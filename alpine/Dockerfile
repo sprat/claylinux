@@ -14,7 +14,6 @@ RUN apk add --no-cache intel-ucode amd-ucode
 RUN apk add --no-cache alpine-base
 
 # Generate the default syslinux configuration
-# add root=/dev/ram0 on the cmdline?
 ARG CONSOLE=ttyS0
 RUN KERNEL="vmlinuz-$FLAVOR" \
 && INITRD="intel-ucode.img,amd-ucode.img,initramfs" \
