@@ -1,6 +1,6 @@
 # claylinux
 
-Claylinux is a toolbox to build live OS images using some Dockerfiles and BuildKit.
+Claylinux is a toolbox to build OS images using Dockerfiles.
 
 This project is currently a **WORK IN PROGRESS**.
 
@@ -48,7 +48,8 @@ The Alpine init script does not seem to support booting a root filesystem stored
 expects an apkovl overlay file (`diskless` mode), either is expects another device on which the root filesystem is
 stored (`sys` mode).
 
-I am not sure how the `data` mode works, but I guess it's a special case of the `diskless` mode.
+I am not sure how the `data` mode works, but I guess it's a special case of the `diskless` mode where only the `/var`
+directory is mounted from a storage device.
 
 Here are some interesting links about the Alpine Linux' boot:
 - https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device
