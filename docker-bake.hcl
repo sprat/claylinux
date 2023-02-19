@@ -27,7 +27,7 @@ target "alpine" {
 target "test" {
     context = "test"
     contexts = {
-        "system" = "target:alpine"
+        "base" = "target:alpine"
         "builder" = "target:builder"
     }
     output = ["type=local,dest=out"]

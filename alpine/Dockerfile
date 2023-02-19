@@ -1,24 +1,24 @@
 # syntax=docker/dockerfile:1.5
 ARG VERSION=latest
 
-FROM alpine:$VERSION AS base
-
-# TODO: maybe we shouldn't install the packages to avoid adding more files than necessary
+# =========================================================
+FROM alpine:$VERSION AS kernel
 ARG FLAVOR=lts
-RUN apk add --no-cache linux-$FLAVOR linux-firmware-none \
-&& rm /boot/initramfs-$FLAVOR \
-&& rm /boot/boot
+RUN apk add --no-cache --no-scripts linux-$FLAVOR linux-firmware-none \
+&& for f in /boot/*-$FLAVOR; do mv $f ${f%-$FLAVOR}; done \
+&& mkdir -p /out/boot /out/lib \
+&& mv /boot /out \
+&& mv /lib/modules /out/lib
 
-# TODO: ucode should be optional
-RUN apk add --no-cache intel-ucode amd-ucode
+# =========================================================
+FROM alpine:$VERSION AS base
+COPY --from=kernel /out /
 RUN apk add --no-cache alpine-base
 
 # Generate the default syslinux configuration
 ARG CONSOLE=ttyS0
-RUN KERNEL="vmlinuz-$FLAVOR" \
-&& INITRD="intel-ucode.img,amd-ucode.img,initramfs" \
-&& CMDLINE="console=$CONSOLE" \
-&& printf "DEFAULT Linux\nLABEL Linux\n  KERNEL $KERNEL\n  INITRD $INITRD\n  APPEND $CMDLINE\n" >/boot/syslinux.cfg
+RUN CMDLINE="console=$CONSOLE" \
+&& printf "DEFAULT Linux\nLABEL Linux\n  KERNEL vmlinuz\n  INITRD initramfs\n  APPEND $CMDLINE\n" >/boot/syslinux.cfg
 
 # Setup the system
 ARG HOSTNAME="claylinux"
