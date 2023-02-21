@@ -4,11 +4,9 @@ ARG VERSION=latest
 # =========================================================
 FROM alpine:$VERSION AS kernel
 ARG FLAVOR=lts
-RUN apk add --no-cache --no-scripts linux-$FLAVOR linux-firmware-none \
-&& printf "DEFAULT Linux\nLABEL Linux\nKERNEL vmlinuz-$FLAVOR\nINITRD initramfs\n" >/boot/syslinux.cfg \
-&& mkdir -p /out/boot /out/lib \
-&& mv /boot /out \
-&& mv /lib/modules /out/lib
+RUN mkdir -p /out \
+&& apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.PKGINFO --exclude=.SIGN* \
+&& printf "DEFAULT Linux\nLABEL Linux\nKERNEL vmlinuz-$FLAVOR\nINITRD initramfs\n" >/out/boot/syslinux.cfg
 
 # =========================================================
 FROM alpine:$VERSION AS base
