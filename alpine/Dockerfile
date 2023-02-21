@@ -2,17 +2,23 @@
 ARG VERSION=latest
 
 # =========================================================
-FROM alpine:$VERSION AS kernel
+FROM alpine:$VERSION AS overlay
+
+# install the kernel
 ARG FLAVOR=lts
 RUN mkdir -p /out \
-&& apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.PKGINFO --exclude=.SIGN* \
-&& printf "DEFAULT Linux\nLABEL Linux\nKERNEL vmlinuz-$FLAVOR\nINITRD initramfs\n" >/out/boot/syslinux.cfg
+&& apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.PKGINFO --exclude=.SIGN*
+
+# create the according syslinux configuration
+RUN printf "DEFAULT Linux\nLABEL Linux\nKERNEL vmlinuz-$FLAVOR\nINITRD initramfs\n" >/out/boot/syslinux.cfg
+
+# copy our custom init script
+COPY ./init /out
 
 # =========================================================
 FROM alpine:$VERSION AS base
-COPY --from=kernel /out /
+COPY --from=overlay /out /
 RUN apk add --no-cache alpine-base
-COPY ./init /
 
 # Setup the system
 ARG HOSTNAME="claylinux"
