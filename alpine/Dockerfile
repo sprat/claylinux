@@ -24,7 +24,6 @@ COPY ./init /out
 
 # setup the system
 ARG HOSTNAME="claylinux"
-# TODO: modloop in sysinit?
 ARG SYSINIT_SERVICES="devfs dmesg mdev hwdrivers"
 ARG BOOT_SERVICES="modules sysctl hostname bootmisc syslog loadkmap networking hwclock"
 ARG DEFAULT_SERVICES="firstboot acpid ntpd"
