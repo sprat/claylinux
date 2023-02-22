@@ -5,4 +5,4 @@ set -eu
 mkdir -p /newroot
 mount -t tmpfs root /newroot
 find / -mindepth 1 -prune ! -path /newroot -exec cp -at /newroot {} +
-exec switch_root /newroot /sbin/init "$@" || sh
+exec switch_root /newroot /sbin/init "$@"
