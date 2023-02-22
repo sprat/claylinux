@@ -30,7 +30,6 @@ ARG SYSINIT_SERVICES="devfs dmesg mdev hwdrivers"
 ARG BOOT_SERVICES="modules sysctl hostname bootmisc syslog loadkmap networking hwclock"
 ARG DEFAULT_SERVICES="firstboot acpid ntpd"
 ARG SHUTDOWN_SERVICES="mount-ro killprocs savecache"
-# TODO: it would be good to add the hostname in /etc/hosts, but it's complicated because /etc/hosts is overlayed
 
 RUN set -euxo pipefail; \
 echo "$HOSTNAME" >/out/etc/hostname; \
