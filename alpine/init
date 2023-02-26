@@ -4,5 +4,5 @@ set -eu
 # So, we need to copy all the files into a new tmpfs and "switch_root" to it
 mkdir -p /newroot
 mount -t tmpfs root /newroot
-find / -mindepth 1 -prune ! -path /newroot -exec cp -at /newroot {} +
+find / -mindepth 1 -maxdepth 1 ! -path /newroot -exec cp -at /newroot {} +
 exec switch_root /newroot /sbin/init "$@"
