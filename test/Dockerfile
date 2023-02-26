@@ -10,7 +10,7 @@ RUN echo "APPEND console=ttyS0" >>/boot/syslinux.cfg && sed -i '/^#ttyS0/s/^#//g
 
 # =========================================================
 FROM builder AS build
-RUN --mount=type=bind,from=system,target=/system build-os
+RUN --mount=from=system,target=/system build-img
 
 # =========================================================
 FROM scratch AS output
