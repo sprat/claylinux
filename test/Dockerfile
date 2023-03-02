@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM base AS system
 # TODO: make sure the ucodes are used in the syslinux config and/or in the initramfs
 # RUN apk add --no-cache intel-ucode amd-ucode
