@@ -32,7 +32,6 @@ RUN set -euxo pipefail; \
 echo "$HOSTNAME" >/out/etc/hostname; \
 printf "127.0.1.1\t$HOSTNAME\n" >>/out/etc/hosts; \
 printf "auto lo\niface lo inet loopback\n\nauto eth0\niface eth0 inet dhcp\n" >/out/etc/network/interfaces; \
-sed -i 's/root:[*!]:/root::/g' /out/etc/shadow; \
 rc_add() { local lvl=$1; shift; for svc; do ln -s /etc/init.d/$svc /out/etc/runlevels/$lvl/$svc; done; }; \
 rc_add sysinit $SYSINIT_SERVICES; \
 rc_add boot $BOOT_SERVICES; \
