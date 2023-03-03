@@ -5,7 +5,7 @@ FROM alpine:$VERSION AS overlay
 
 # install the alpine-base package (for the user space)
 # TODO: or a subset of the packages?
-# Note that we need to delete character devices because they are transformed to regular files, which causes various
+# Note that we need to delete special files because they are transformed to regular files, which causes various
 # problems. See https://github.com/moby/buildkit/issues/2914 and https://github.com/docker/buildx/issues/1027
 RUN set -euxo pipefail; \
 mkdir -p /out/etc; \
