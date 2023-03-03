@@ -16,7 +16,8 @@ rm -rf /out/dev/*
 # install the kernel (without installing the dependencies)
 ARG FLAVOR=lts
 RUN set -euxo pipefail; \
-apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.PKGINFO --exclude=.SIGN*
+apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.*; \
+printf "DEFAULT Linux\nLABEL Linux\nKERNEL vmlinuz-$FLAVOR\nINITRD initramfs\n" >/out/boot/syslinux.cfg
 
 # copy our custom init script
 COPY ./init /out
@@ -36,8 +37,7 @@ rc_add() { local lvl=$1; shift; for svc; do ln -s /etc/init.d/$svc /out/etc/runl
 rc_add sysinit $SYSINIT_SERVICES; \
 rc_add boot $BOOT_SERVICES; \
 rc_add default $DEFAULT_SERVICES; \
-rc_add shutdown $SHUTDOWN_SERVICES; \
-printf "DEFAULT Linux\nLABEL Linux\nKERNEL vmlinuz-$FLAVOR\nINITRD initramfs\n" >/out/boot/syslinux.cfg
+rc_add shutdown $SHUTDOWN_SERVICES;
 
 # =========================================================
 FROM scratch AS final
