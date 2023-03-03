@@ -23,8 +23,8 @@ target "alpine" {
 target "test" {
     context = "test"
     contexts = {
-        "base" = "target:alpine"
-        "builder" = "target:builder"
+        base = "target:alpine"
+        builder = "target:builder"
     }
     output = ["type=local,dest=out"]
 }
