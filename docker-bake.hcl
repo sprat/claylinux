@@ -10,10 +10,6 @@ group "default" {
     targets = ["builder", "alpine"]
 }
 
-group "all" {
-    targets = ["builder", "alpine", "test"]
-}
-
 target "builder" {
     context = "builder"
     tags = ["${REPOSITORY}builder:${TAG}"]
