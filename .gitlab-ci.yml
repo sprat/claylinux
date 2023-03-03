@@ -17,7 +17,7 @@ build:
     - .docker
     - .docker-login-ci
   variables:
-    REPOSITORY: ${CI_REGISTRY_IMAGE}/
+    NAMESPACE: ${CI_REGISTRY_IMAGE}/
     TAG: ${CI_COMMIT_REF_NAME}
   script:
     - docker buildx bake --push
