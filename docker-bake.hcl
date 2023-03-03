@@ -7,7 +7,7 @@ variable "TAG" {
 }
 
 group "default" {
-    targets = ["builder", "alpine"]
+    targets = ["builder", "alpine", "alpine-virt"]
 }
 
 target "builder" {
@@ -20,10 +20,18 @@ target "alpine" {
     tags = ["${NAMESPACE}alpine:${TAG}"]
 }
 
+target "alpine-virt" {
+    context = "alpine"
+    tags = ["${NAMESPACE}alpine:${TAG}-virt"]
+    args = {
+        FLAVOR = "virt"
+    }
+}
+
 target "test" {
     context = "test"
     contexts = {
-        base = "target:alpine"
+        base = "target:alpine-virt"
         builder = "target:builder"
     }
     output = ["type=local,dest=out"]
