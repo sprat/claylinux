@@ -1,5 +1,5 @@
 variable "REPOSITORY" {
-  default = "claylinux"
+  default = "claylinux/"
 }
 
 variable "TAG" {
@@ -16,12 +16,12 @@ group "all" {
 
 target "builder" {
     context = "builder"
-    tags = ["${REPOSITORY}/builder:${TAG}"]
+    tags = ["${REPOSITORY}builder:${TAG}"]
 }
 
 target "alpine" {
     context = "alpine"
-    tags = ["${REPOSITORY}/alpine:${TAG}"]
+    tags = ["${REPOSITORY}alpine:${TAG}"]
 }
 
 target "test" {
