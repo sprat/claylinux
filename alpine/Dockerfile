@@ -20,8 +20,7 @@ apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out -
 mv /out/boot/vmlinuz-$FLAVOR /out/boot/kernel; \
 mv /out/boot/config-$FLAVOR /out/boot/config; \
 rm /out/boot/System.map-$FLAVOR; \
-printf "DEFAULT Linux\nLABEL Linux\nKERNEL kernel\nINITRD initramfs\n" >/out/boot/syslinux.cfg; \
-if [[ "$FLAVOR" = "virt" ]]; then echo "APPEND console=ttyS0" >>/out/boot/syslinux.cfg; sed -i '/^#ttyS0/s/^#//g' /out/etc/inittab; fi
+touch /out/boot/cmdline
 
 # copy our custom init script
 COPY ./init /out
@@ -41,7 +40,8 @@ rc_add() { local lvl=$1; shift; for svc; do ln -s /etc/init.d/$svc /out/etc/runl
 rc_add sysinit $SYSINIT_SERVICES; \
 rc_add boot $BOOT_SERVICES; \
 rc_add default $DEFAULT_SERVICES; \
-rc_add shutdown $SHUTDOWN_SERVICES;
+rc_add shutdown $SHUTDOWN_SERVICES; \
+if [[ "$FLAVOR" = "virt" ]]; then echo "console=tty0 console=ttyS0" >>/out/boot/cmdline; sed -i '/^#ttyS0/s/^#//g' /out/etc/inittab; fi
 
 # =========================================================
 FROM scratch AS final

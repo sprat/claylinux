@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-BOOT_DIR=/boot
+BUILD_DIR=/build
 SYSTEM_DIR=/system
 OUTPUT_DIR=/out
 OUTPUT_NAME=claylinux
@@ -13,20 +13,31 @@ COMPRESS="pigz -9"
 
 # Prepare the OS files
 prepare_os() {
-	mkdir -p $BOOT_DIR $OUTPUT_DIR
-	echo "Copying the boot directory"
-	cp -R $SYSTEM_DIR/boot/. $BOOT_DIR
+	mkdir -p $BUILD_DIR $OUTPUT_DIR
 
-	pushd $SYSTEM_DIR >/dev/null
+	echo "Copying the boot directory"
+	rsync -aq --exclude cmdline $SYSTEM_DIR/boot/ $BUILD_DIR/
+
+	echo "Generating the syslinux configuration"
+	cmdline=$(cat $SYSTEM_DIR/boot/cmdline | tr '\n' ' ')
+	cat >$BUILD_DIR/syslinux.cfg <<-EOF
+	DEFAULT Linux
+	LABEL Linux
+	  KERNEL kernel
+	  INITRD initramfs
+	  APPEND ${cmdline}
+	EOF
+
 	echo "Generating the initramfs"
-	find . -path './boot' -prune -o -print | sort | cpio -oH newc | $COMPRESS >$BOOT_DIR/initramfs
+	pushd $SYSTEM_DIR >/dev/null
+	find . -path './boot' -prune -o -print | sort | cpio -oH newc | $COMPRESS >$BUILD_DIR/initramfs
 	popd >/dev/null
 }
 
 # Just copy the files to the output directory
 create_raw() {
 	echo "Copying the OS files to the output directory"
-	mv $BOOT_DIR/* $OUTPUT_DIR
+	mv $BUILD_DIR/* $OUTPUT_DIR
 }
 
 # Creates a disk image with a MBR and a single whole disk partition
@@ -36,7 +47,7 @@ create_img() {
 	syslinux_mbr=$SYSLINUX_DIR/mbr.bin
 	syslinux_mbr_length=440
 	part_file=/tmp/part.img
-	boot_dir_size=$(du -sk $BOOT_DIR | cut -f1)  # in KB
+	boot_dir_size=$(du -sk $BUILD_DIR | cut -f1)  # in KB
 	# add some headroom to account for the filesystem overhead & the missing syslinux bootloader files
 	part_size=$(( boot_dir_size + 4 * 1024 ))
 
@@ -46,7 +57,7 @@ create_img() {
 	mkdir -p "$(dirname $part_file)"
 	mkfs.vfat -n "$VOLUME_NAME" -F 32 -C $part_file $part_size
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
-	mcopy -i $part_file $BOOT_DIR/* ::/
+	mcopy -i $part_file $BUILD_DIR/* ::/
 	# copy the syslinux bootloader
 	syslinux --install $part_file
 
@@ -78,8 +89,8 @@ create_iso() {
 
 	echo "Generating the iso image"
 
-	mkdir -p $BOOT_DIR/syslinux
-	cp $SYSLINUX_DIR/isolinux.bin $SYSLINUX_DIR/ldlinux.c32 $BOOT_DIR/syslinux
+	mkdir -p $BUILD_DIR/syslinux
+	cp $SYSLINUX_DIR/isolinux.bin $SYSLINUX_DIR/ldlinux.c32 $BUILD_DIR/syslinux
 
 	# see https://wiki.syslinux.org/wiki/index.php?title=Isohybrid
 	xorrisofs \
@@ -95,7 +106,7 @@ create_iso() {
 	-rational-rock \
 	-sysid LINUX \
 	-volid "$VOLUME_NAME" \
-	$BOOT_DIR
+	$BUILD_DIR
 }
 
 prepare_os
