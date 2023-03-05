@@ -17,7 +17,11 @@ rm -rf /out/dev/*
 ARG FLAVOR=lts
 RUN set -euxo pipefail; \
 apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.*; \
-printf "DEFAULT Linux\nLABEL Linux\nKERNEL vmlinuz-$FLAVOR\nINITRD initramfs\n" >/out/boot/syslinux.cfg
+mv /out/boot/vmlinuz-$FLAVOR /out/boot/kernel; \
+mv /out/boot/config-$FLAVOR /out/boot/config; \
+rm /out/boot/System.map-$FLAVOR; \
+printf "DEFAULT Linux\nLABEL Linux\nKERNEL kernel\nINITRD initramfs\n" >/out/boot/syslinux.cfg; \
+if [[ "$FLAVOR" = "virt" ]]; then echo "APPEND console=ttyS0" >>/out/boot/syslinux.cfg; sed -i '/^#ttyS0/s/^#//g' /out/etc/inittab; fi
 
 # copy our custom init script
 COPY ./init /out
