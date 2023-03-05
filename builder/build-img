@@ -1,53 +1,44 @@
 #!/bin/bash
 set -euo pipefail
 
-BUILD_DIR=/build
-SYSTEM_DIR=/system
-OUTPUT_DIR=/out
-OUTPUT_NAME=claylinux
-VOLUME_NAME=$(echo $OUTPUT_NAME | tr '[:lower:]' '[:upper:]')
-SYSLINUX_DIR=/usr/share/syslinux
-COMPRESS="pigz -9"
-# COMPRESS="xz -C crc32 -9 -T0"
-# COMPRESS="zstd -19 -T0"
-
 # Prepare the OS files
-prepare_os() {
-	mkdir -p $BUILD_DIR $OUTPUT_DIR
+prepare() {
+	local cmdline
 
 	echo "Copying the boot directory"
-	rsync -aq --exclude cmdline $SYSTEM_DIR/boot/ $BUILD_DIR/
+	rsync -aq --exclude cmdline "$SYSTEM_DIR"/boot/ "$BUILD_DIR"/
 
 	echo "Generating the syslinux configuration"
-	cmdline=$(cat $SYSTEM_DIR/boot/cmdline | tr '\n' ' ')
-	cat >$BUILD_DIR/syslinux.cfg <<-EOF
+	cmdline=$(tr '\n' ' ' <"$SYSTEM_DIR"/boot/cmdline)
+	[[ -z "$cmdline" ]] && cmdline="-"
+	cat >"$BUILD_DIR"/syslinux.cfg <<-EOF
 	DEFAULT Linux
 	LABEL Linux
 	  KERNEL kernel
 	  INITRD initramfs
-	  APPEND ${cmdline}
+	  APPEND $cmdline
 	EOF
 
 	echo "Generating the initramfs"
-	pushd $SYSTEM_DIR >/dev/null
-	find . -path './boot' -prune -o -print | sort | cpio -oH newc | $COMPRESS >$BUILD_DIR/initramfs
+	pushd "$SYSTEM_DIR" >/dev/null
+	find . -path './boot' -prune -o -print | sort | cpio -oH newc | $COMPRESS >"$BUILD_DIR"/initramfs
 	popd >/dev/null
 }
 
 # Just copy the files to the output directory
 create_raw() {
 	echo "Copying the OS files to the output directory"
-	mv $BUILD_DIR/* $OUTPUT_DIR
+	mv "$BUILD_DIR"/* "$OUTPUT_DIR"
 }
 
 # Creates a disk image with a MBR and a single whole disk partition
 create_img() {
-	disk_file=$OUTPUT_DIR/$OUTPUT_NAME.img
+	disk_file="$OUTPUT_DIR"/"$OUTPUT_NAME".img
 	disk_label=dos  # for sfdisk
-	syslinux_mbr=$SYSLINUX_DIR/mbr.bin
+	syslinux_mbr="$SYSLINUX_DIR"/mbr.bin
 	syslinux_mbr_length=440
 	part_file=/tmp/part.img
-	boot_dir_size=$(du -sk $BUILD_DIR | cut -f1)  # in KB
+	boot_dir_size=$(du -sk "$BUILD_DIR" | cut -f1)  # in KB
 	# add some headroom to account for the filesystem overhead & the missing syslinux bootloader files
 	part_size=$(( boot_dir_size + 4 * 1024 ))
 
@@ -57,7 +48,7 @@ create_img() {
 	mkdir -p "$(dirname $part_file)"
 	mkfs.vfat -n "$VOLUME_NAME" -F 32 -C $part_file $part_size
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
-	mcopy -i $part_file $BUILD_DIR/* ::/
+	mcopy -i $part_file "$BUILD_DIR"/* ::/
 	# copy the syslinux bootloader
 	syslinux --install $part_file
 
@@ -66,36 +57,36 @@ create_img() {
 	disk_size=$(( part_size + 2 * 1024 * 1024 ))
 
 	# create a blank image file
-	dd if=/dev/zero of=$disk_file bs=$disk_size count=1 conv=notrunc
+	dd if=/dev/zero of="$disk_file" bs=$disk_size count=1 conv=notrunc
 
 	# add a single full disk partition formatted as FAT32 -- 0c = FAT32 with LBA
-	sfdisk $disk_file <<-EOF
+	sfdisk "$disk_file" <<-EOF
 	label: $disk_label
 	2MiB - 0c *
 	EOF
 
 	# overwrite the MBR
-	dd if=$syslinux_mbr of=$disk_file bs=$syslinux_mbr_length count=1 conv=notrunc
+	dd if=$syslinux_mbr of="$disk_file" bs=$syslinux_mbr_length count=1 conv=notrunc
 
 	# copy in our partition data into the first partition of the disk image
-	dd if=$part_file of=$disk_file bs=2M seek=1 conv=notrunc
+	dd if=$part_file of="$disk_file" bs=2M seek=1 conv=notrunc
 
 	rm -rf $part_file
 }
 
 # Create an hybrid ISO image
 create_iso() {
-	iso_file=$OUTPUT_DIR/$OUTPUT_NAME.iso
+	iso_file="$OUTPUT_DIR"/"$OUTPUT_NAME".iso
 
 	echo "Generating the iso image"
 
-	mkdir -p $BUILD_DIR/syslinux
-	cp $SYSLINUX_DIR/isolinux.bin $SYSLINUX_DIR/ldlinux.c32 $BUILD_DIR/syslinux
+	mkdir -p "$BUILD_DIR"/syslinux
+	cp "$SYSLINUX_DIR"/isolinux.bin "$SYSLINUX_DIR"/ldlinux.c32 "$BUILD_DIR"/syslinux
 
 	# see https://wiki.syslinux.org/wiki/index.php?title=Isohybrid
 	xorrisofs \
-	-output $iso_file \
-	-isohybrid-mbr $SYSLINUX_DIR/isohdpfx.bin \
+	-output "$iso_file" \
+	-isohybrid-mbr "$SYSLINUX_DIR"/isohdpfx.bin \
 	-eltorito-catalog syslinux/boot.cat \
 	-eltorito-boot syslinux/isolinux.bin \
 	-no-emul-boot \
@@ -106,8 +97,20 @@ create_iso() {
 	-rational-rock \
 	-sysid LINUX \
 	-volid "$VOLUME_NAME" \
-	$BUILD_DIR
+	"$BUILD_DIR"
 }
 
-prepare_os
+: "${SYSTEM_DIR:=/system}"
+: "${OUTPUT_DIR:=/out}"
+: "${OUTPUT_NAME:=claylinux}"
+: "${VOLUME_NAME:=CLAYLINUX}"
+: "${COMPRESS:="pigz -9"}"
+# COMPRESS="xz -C crc32 -9 -T0"
+# COMPRESS="zstd -19 -T0"
+SYSLINUX_DIR=/usr/share/syslinux
+
+mkdir -p "$OUTPUT_DIR"
+BUILD_DIR=$(mktemp -d)
+trap 'rm -rf $BUILD_DIR' EXIT
+prepare
 create_iso
