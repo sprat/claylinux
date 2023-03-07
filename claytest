@@ -30,11 +30,11 @@ usage() {
 }
 
 case "${1:-usage}" in
-  build|run)
-	"$@"
-	;;
-  *)
-	usage
-	exit 1
-	;;
+	build|run)
+		"$@"
+		;;
+	*)
+		usage
+		exit 1
+		;;
 esac
