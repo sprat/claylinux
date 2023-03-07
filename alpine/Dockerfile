@@ -41,7 +41,10 @@ rc_add sysinit $SYSINIT_SERVICES; \
 rc_add boot $BOOT_SERVICES; \
 rc_add default $DEFAULT_SERVICES; \
 rc_add shutdown $SHUTDOWN_SERVICES; \
-if [[ "$FLAVOR" = "virt" ]]; then echo "console=tty0 console=ttyS0" >>/out/boot/cmdline; sed -i '/^#ttyS0/s/^#//g' /out/etc/inittab; fi
+if [[ "$FLAVOR" = "virt" ]]; then \
+  echo "console=tty0 console=ttyS0" >>/out/boot/cmdline; \
+  sed -i '/^#ttyS0/s/^#//g' /out/etc/inittab; \
+fi
 
 # =========================================================
 FROM scratch AS final
