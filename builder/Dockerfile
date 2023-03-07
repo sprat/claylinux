@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 ARG VERSION=latest
 
 FROM alpine:$VERSION AS builder
