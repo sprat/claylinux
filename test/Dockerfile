@@ -4,7 +4,7 @@ FROM base AS system
 # basic setup:
 # - add the ucode packages
 # - enable passwordless root login
-RUN set -euo pipefail; \
+RUN set -euxo pipefail; \
 apk add --no-cache intel-ucode amd-ucode; \
 passwd -d root
 

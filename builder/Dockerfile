@@ -4,7 +4,7 @@ ARG VERSION=latest
 FROM alpine:$VERSION AS builder
 
 # add the necessary tools to generate the OS
-RUN set -euo pipefail; \
+RUN set -euxo pipefail; \
 apk add --no-cache bash sfdisk dosfstools mtools rsync syslinux xorriso xz zstd pigz; \
 mkdir -p /system
 
