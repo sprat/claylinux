@@ -3,25 +3,28 @@ set -euo pipefail
 
 # Prepare the OS files
 prepare() {
-	local cmdline
+	local cmdline initrd
 
 	echo "Copying the boot directory"
-	rsync -aq --exclude cmdline "$SYSTEM_DIR"/boot/ "$BUILD_DIR"/
-
-	echo "Generating the syslinux configuration"
-	cmdline=$(tr '\n' ' ' <"$SYSTEM_DIR"/boot/cmdline)
-	[[ -z "$cmdline" ]] && cmdline="-"
-	cat >"$BUILD_DIR"/syslinux.cfg <<-EOF
-	DEFAULT Linux
-	LABEL Linux
-	  KERNEL kernel
-	  INITRD initramfs
-	  APPEND $cmdline
-	EOF
+	rsync -aq --exclude cmdline "$SYSTEM_DIR"/boot/ "$BUILD_DIR"
 
 	echo "Generating the initramfs"
 	pushd "$SYSTEM_DIR" >/dev/null
 	find . -path './boot' -prune -o -print | sort | cpio -oH newc | $COMPRESS >"$BUILD_DIR"/initramfs
+	popd >/dev/null
+
+	echo "Generating the syslinux configuration"
+	pushd "$BUILD_DIR" >/dev/null
+	initrd="$(echo *.img initramfs | tr ' ' ',')"
+	cmdline=$(tr '\n' ' ' <"$SYSTEM_DIR"/boot/cmdline)
+	[[ -z "$cmdline" ]] && cmdline="-"
+	cat >syslinux.cfg <<-EOF
+	DEFAULT Linux
+	LABEL Linux
+	  KERNEL kernel
+	  INITRD $initrd
+	  APPEND $cmdline
+	EOF
 	popd >/dev/null
 }
 

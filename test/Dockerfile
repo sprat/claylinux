@@ -1,10 +1,12 @@
 # syntax=docker/dockerfile:1
 FROM base AS system
 
-# TODO: make sure the ucodes are used in the syslinux config and/or in the initramfs
-# RUN apk add --no-cache intel-ucode amd-ucode
-# enable passwordless root login
-RUN sed -i 's/root:[*!]:/root::/g' /etc/shadow
+# basic setup:
+# - add the ucode packages
+# - enable passwordless root login
+RUN set -euo pipefail; \
+apk add --no-cache intel-ucode amd-ucode; \
+passwd -d root
 
 # =========================================================
 FROM builder AS build
