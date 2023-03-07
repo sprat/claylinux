@@ -1,22 +1,27 @@
 #!/bin/bash
 set -euo pipefail
 
-# Prepare the OS files
-prepare() {
+die() {
+	echo "$@" >&2
+	exit 1
+}
+
+# build the boot files
+build() {
 	local cmdline initrd
 
 	echo "Copying the boot directory"
-	rsync -aq --exclude cmdline "$SYSTEM_DIR"/boot/ "$BUILD_DIR"
+	rsync -aq --exclude cmdline "$system_dir"/boot/ "$build_dir"
 
 	echo "Generating the initramfs"
-	pushd "$SYSTEM_DIR" >/dev/null
-	find . -path './boot' -prune -o -print | sort | cpio -oH newc | $COMPRESS >"$BUILD_DIR"/initramfs
+	pushd "$system_dir" >/dev/null
+	find . -path './boot' -prune -o -print | sort | cpio -oH newc | compress >"$build_dir"/initramfs
 	popd >/dev/null
 
 	echo "Generating the syslinux configuration"
-	pushd "$BUILD_DIR" >/dev/null
+	pushd "$build_dir" >/dev/null
 	initrd="$(echo *.img initramfs | tr ' ' ',')"
-	cmdline=$(tr '\n' ' ' <"$SYSTEM_DIR"/boot/cmdline)
+	cmdline=$(tr '\n' ' ' <"$system_dir"/boot/cmdline)
 	[[ -z "$cmdline" ]] && cmdline="-"
 	cat >syslinux.cfg <<-EOF
 	DEFAULT Linux
@@ -28,20 +33,41 @@ prepare() {
 	popd >/dev/null
 }
 
-# Just copy the files to the output directory
-create_raw() {
-	echo "Copying the OS files to the output directory"
-	mv "$BUILD_DIR"/* "$OUTPUT_DIR"
+# compress the initramfs with the specified scheme
+compress() {
+	case "$compression" in
+	none)
+		cat
+		;;
+	gz)
+		pigz -9
+		;;
+	xz)
+		xz -C crc32 -9 -T0
+		;;
+	zstd)
+		zstd -19 -T0
+		;;
+	*)
+		die "Invalid compression scheme: $compression"
+		;;
+	esac
 }
 
-# Creates a disk image with a MBR and a single whole disk partition
-create_img() {
-	disk_file="$OUTPUT_DIR"/"$OUTPUT_NAME".img
+# just copy the build files to the output directory
+generate_files() {
+	echo "Copying the OS files to the output directory"
+	mv "$build_dir"/* "$output_dir"
+}
+
+# generate a disk image with a MBR and a single whole disk partition
+generate_img() {
+	disk_file="$output_dir"/"$name".img
 	disk_label=dos  # for sfdisk
-	syslinux_mbr="$SYSLINUX_DIR"/mbr.bin
+	syslinux_mbr="$syslinux_dir"/mbr.bin
 	syslinux_mbr_length=440
 	part_file=/tmp/part.img
-	boot_dir_size=$(du -sk "$BUILD_DIR" | cut -f1)  # in KB
+	boot_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
 	# add some headroom to account for the filesystem overhead & the missing syslinux bootloader files
 	part_size=$(( boot_dir_size + 4 * 1024 ))
 
@@ -49,9 +75,9 @@ create_img() {
 
 	# create a FAT32 filesystem
 	mkdir -p "$(dirname $part_file)"
-	mkfs.vfat -n "$VOLUME_NAME" -F 32 -C $part_file $part_size
+	mkfs.vfat -n "$volume" -F 32 -C $part_file $part_size
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
-	mcopy -i $part_file "$BUILD_DIR"/* ::/
+	mcopy -i $part_file "$build_dir"/* ::/
 	# copy the syslinux bootloader
 	syslinux --install $part_file
 
@@ -77,19 +103,19 @@ create_img() {
 	rm -rf $part_file
 }
 
-# Create an hybrid ISO image
-create_iso() {
-	iso_file="$OUTPUT_DIR"/"$OUTPUT_NAME".iso
+# generate an hybrid ISO image
+generate_iso() {
+	iso_file="$output_dir"/"$name".iso
 
 	echo "Generating the iso image"
 
-	mkdir -p "$BUILD_DIR"/syslinux
-	cp "$SYSLINUX_DIR"/isolinux.bin "$SYSLINUX_DIR"/ldlinux.c32 "$BUILD_DIR"/syslinux
+	mkdir -p "$build_dir"/syslinux
+	cp "$syslinux_dir"/isolinux.bin "$syslinux_dir"/ldlinux.c32 "$build_dir"/syslinux
 
 	# see https://wiki.syslinux.org/wiki/index.php?title=Isohybrid
 	xorrisofs \
 	-output "$iso_file" \
-	-isohybrid-mbr "$SYSLINUX_DIR"/isohdpfx.bin \
+	-isohybrid-mbr "$syslinux_dir"/isohdpfx.bin \
 	-eltorito-catalog syslinux/boot.cat \
 	-eltorito-boot syslinux/isolinux.bin \
 	-no-emul-boot \
@@ -99,21 +125,68 @@ create_iso() {
 	-full-iso9660-filenames \
 	-rational-rock \
 	-sysid LINUX \
-	-volid "$VOLUME_NAME" \
-	"$BUILD_DIR"
+	-volid "$volume" \
+	"$build_dir"
 }
 
-: "${SYSTEM_DIR:=/system}"
-: "${OUTPUT_DIR:=/out}"
-: "${OUTPUT_NAME:=claylinux}"
-: "${VOLUME_NAME:=CLAYLINUX}"
-: "${COMPRESS:="pigz -9"}"
-# COMPRESS="xz -C crc32 -9 -T0"
-# COMPRESS="zstd -19 -T0"
-SYSLINUX_DIR=/usr/share/syslinux
+usage() {
+	cat <<-EOF
+	Usage: $0 [OPTIONS ...]
 
-mkdir -p "$OUTPUT_DIR"
-BUILD_DIR=$(mktemp -d)
-trap 'rm -rf $BUILD_DIR' EXIT
-prepare
-create_iso
+	Options:
+	  -f, --format FORMAT       Output format: files | img | iso (default: "$format")
+	  -n, --name NAME           Image filename (default: "$name")
+	  -v, --volume VOLUME       Volume name/label of the boot partition (default: "$volume")
+	  -c, --compression COMP    Compression format for the initramfs: none | gz | xz | zstd
+	EOF
+}
+
+# defaults
+system_dir=/system
+output_dir=/out
+syslinux_dir=/usr/share/syslinux
+format=iso
+name=claylinux
+volume=CLAYLINUX
+compression=gz
+
+# parse the command-line arguments
+while [[ "$#" -gt 0 ]]; do
+	case "$1" in
+		-h|--help)
+			usage
+			exit 0
+			;;
+		-f|--format)
+			format="$2"
+			shift 2
+			;;
+		-n|--name)
+			name="$2"
+			shift 2
+			;;
+		-v|--volume)
+			volume="$2"
+			shift 2
+			;;
+		-c|--compression)
+			compression="$2"
+			shift 2
+			;;
+		-*)
+			die "Invalid option: $1"
+			;;
+		*)
+			die "Invalid parameter: $1"
+			# POSITIONAL_ARGS+=("$1")
+			# shift
+			;;
+	esac
+done
+# set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+mkdir -p "$output_dir"
+build_dir=$(mktemp -d)
+trap 'rm -rf $build_dir' EXIT
+build
+generate_"$format"
