@@ -13,7 +13,7 @@ build() {
 	pushd "$system_dir" >/dev/null
 
 	echo "Copying the boot directory"
-	find ./boot -mindepth 1 -maxdepth 1 ! -name cmdline -print0 | xargs -0 cp -at "$build_dir"
+	find ./boot -mindepth 1 -maxdepth 1 ! -name cmdline -exec cp -at "$build_dir" {} +
 
 	echo "Generating the initramfs"
 	find . -path ./boot -prune -o -print | sort | cpio -oH newc | compress >"$build_dir"/initramfs
