@@ -16,7 +16,7 @@ build() {
 	find ./boot -mindepth 1 -maxdepth 1 ! -name cmdline -exec cp -at "$build_dir" {} +
 
 	echo "Generating the initramfs"
-	find . -path ./boot -prune -o -print | sort | cpio -oH newc | compress >"$build_dir"/initramfs
+	find . -path ./boot -prune -o -print0 | sort -z | cpio -0oH newc | compress >"$build_dir"/initramfs
 
 	popd >/dev/null
 
