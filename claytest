@@ -15,7 +15,6 @@ run() {
 	-netdev "${1:-user}",id=net \
 	-device virtio-net,netdev=net \
 	-device virtio-rng \
-	-boot d \
 	-cdrom out/claylinux.iso
 }
 
