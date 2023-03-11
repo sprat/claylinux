@@ -6,8 +6,9 @@ build() {
 }
 
 run() {
+	# machine: q35 correspond to a modern PC
 	qemu-system-x86_64 \
-	-M q35 \
+	-machine q35 \
 	-m 1G \
 	-nodefaults \
 	-nographic \
