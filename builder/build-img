@@ -129,6 +129,12 @@ generate_iso() {
 	-sysid LINUX \
 	-volid "$volume" \
 	"$build_dir"
+
+	# TODO: add UEFI options, or create a separate format to support UEFI iso
+	# -eltorito-alt-boot \
+ 	# -eltorito-platform 0xEF \
+ 	# -eltorito-boot syslinux/efiboot.img \
+ 	# -isohybrid-gpt-basdat \
 }
 
 usage() {
