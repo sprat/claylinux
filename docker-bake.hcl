@@ -7,7 +7,7 @@ variable "TAG" {
 }
 
 group "default" {
-    targets = ["builder", "alpine", "alpine-virt"]
+    targets = ["builder", "alpine-lts", "alpine-virt"]
 }
 
 target "builder" {
@@ -15,9 +15,13 @@ target "builder" {
     tags = ["${NAMESPACE}builder:${TAG}"]
 }
 
-target "alpine" {
+# TODO: we should factor the alpine images
+target "alpine-lts" {
     context = "alpine"
-    tags = ["${NAMESPACE}alpine:${TAG}"]
+    tags = ["${NAMESPACE}alpine:${TAG}-lts"]
+    args = {
+        FLAVOR = "lts"
+    }
 }
 
 target "alpine-virt" {
