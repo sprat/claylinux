@@ -6,7 +6,9 @@ build() {
 }
 
 run() {
-	# machine: q35 correspond to a modern PC
+	# machine:
+	# - q35 correspond to a modern PC
+	# - use some accelerators if available: kvm, windows hypervisor platform, or tcg as a fallback
 	qemu-system-x86_64 \
 	-machine q35,accel=kvm:whpx:tcg \
 	-m 1G \
