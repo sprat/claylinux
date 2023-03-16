@@ -64,22 +64,21 @@ generate_files() {
 
 # generate a disk image with a MBR and a single whole disk partition
 generate_img() {
-	disk_file="$output_dir"/"$name".img
-	part_file=/tmp/part.img
-	boot_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
+	local disk_file="$output_dir"/"$name".img part_file build_dir_size part_size disk_size
+
+	part_file="$disk_file".part
+	build_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
 	# add some headroom to account for the filesystem overhead & the missing syslinux bootloader files
-	part_size=$(( boot_dir_size + 4 * 1024 ))
+	part_size=$(( build_dir_size + 4 * 1024 ))
 
 	echo "Generating the disk image"
 
-	mkdir -p "$(dirname $part_file)"
-
 	# create a FAT32 filesystem
-	mkfs.vfat -n "$volume" -F 32 -C $part_file $part_size
+	mkfs.vfat -n "$volume" -F 32 -C "$part_file" $part_size
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
-	mcopy -i $part_file "$build_dir"/* ::/
+	mcopy -i "$part_file" "$build_dir"/* ::/
 	# copy the 2nd stage bootloader
-	syslinux --install $part_file
+	syslinux --install "$part_file"
 
 	# compute the disk size
 	part_size=$(stat -c %s "$part_file")
@@ -92,17 +91,17 @@ generate_img() {
 	echo "start=1MiB type=0c bootable" | sfdisk --label dos "$disk_file"
 
 	# copy in our partition data into the first partition of the disk image
-	dd if=$part_file of="$disk_file" bs=1M seek=1 conv=notrunc
+	dd if="$part_file" of="$disk_file" bs=1M seek=1 conv=notrunc
 
 	# copy the 1st stage bootloader in the MBR
 	dd if="$syslinux_dir"/mbr.bin of="$disk_file" bs=440 count=1 conv=notrunc
 
-	rm -rf $part_file
+	rm -rf "$part_file"
 }
 
 # generate an hybrid ISO image
 generate_iso() {
-	iso_file="$output_dir"/"$name".iso
+	local iso_file="$output_dir"/"$name".iso
 
 	echo "Generating the iso image"
 
