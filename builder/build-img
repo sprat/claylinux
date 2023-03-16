@@ -74,7 +74,7 @@ generate_img() {
 	echo "Generating the disk image"
 
 	# create a FAT32 filesystem
-	mkfs.vfat -n "$volume" -F 32 -C "$part_file" $part_size
+	mkfs.vfat -n "$volume" -F 32 -C "$part_file" $part_size -v
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
 	mcopy -i "$part_file" "$build_dir"/* ::/
 	# copy the 2nd stage bootloader
