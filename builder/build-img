@@ -87,11 +87,8 @@ generate_img() {
 	# create a blank image file
 	dd if=/dev/zero of="$disk_file" bs=$disk_size count=1 conv=notrunc
 
-	# add a single full disk partition formatted as FAT32 -- 0c = FAT32 with LBA
-	sfdisk "$disk_file" <<-EOF
-	label: dos
-	1MiB - 0c *
-	EOF
+	# add a single full disk partition formatted as FAT32 with LBA
+	echo "start=1MiB type=0c bootable" | sfdisk --label dos "$disk_file"
 
 	# copy in our partition data into the first partition of the disk image
 	dd if=$part_file of="$disk_file" bs=1M seek=1 conv=notrunc
