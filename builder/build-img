@@ -82,7 +82,7 @@ generate_img() {
 
 	# compute the disk size
 	part_size=$(stat -c %s "$part_file")
-	disk_size=$(( part_size + 2 * 1024 * 1024 ))
+	disk_size=$(( part_size + 1 * 1024 * 1024 ))
 
 	# create a blank image file
 	dd if=/dev/zero of="$disk_file" bs=$disk_size count=1 conv=notrunc
@@ -90,11 +90,11 @@ generate_img() {
 	# add a single full disk partition formatted as FAT32 -- 0c = FAT32 with LBA
 	sfdisk "$disk_file" <<-EOF
 	label: dos
-	2MiB - 0c *
+	1MiB - 0c *
 	EOF
 
 	# copy in our partition data into the first partition of the disk image
-	dd if=$part_file of="$disk_file" bs=2M seek=1 conv=notrunc
+	dd if=$part_file of="$disk_file" bs=1M seek=1 conv=notrunc
 
 	# overwrite the MBR
 	dd if="$syslinux_dir"/mbr.bin of="$disk_file" bs=440 count=1 conv=notrunc
@@ -150,7 +150,7 @@ usage() {
 system_dir=/system
 output_dir=/out
 syslinux_dir=/usr/share/syslinux
-format=iso
+format=img
 name=claylinux
 volume=CLAYLINUX
 compression=gz
