@@ -72,12 +72,13 @@ generate_img() {
 
 	echo "Generating the disk image"
 
-	# create a FAT32 filesystem
 	mkdir -p "$(dirname $part_file)"
+
+	# create a FAT32 filesystem
 	mkfs.vfat -n "$volume" -F 32 -C $part_file $part_size
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
 	mcopy -i $part_file "$build_dir"/* ::/
-	# copy the syslinux bootloader
+	# copy the 2nd stage bootloader
 	syslinux --install $part_file
 
 	# compute the disk size
@@ -93,7 +94,7 @@ generate_img() {
 	# copy in our partition data into the first partition of the disk image
 	dd if=$part_file of="$disk_file" bs=1M seek=1 conv=notrunc
 
-	# overwrite the MBR
+	# copy the 1st stage bootloader in the MBR
 	dd if="$syslinux_dir"/mbr.bin of="$disk_file" bs=440 count=1 conv=notrunc
 
 	rm -rf $part_file
