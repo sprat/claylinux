@@ -68,8 +68,8 @@ generate_img() {
 
 	part_file="$disk_file".part
 	build_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
-	# add some headroom to account for the filesystem overhead & the missing syslinux bootloader files
-	part_size=$(( build_dir_size + 4 * 1024 ))
+	# add some headroom to account for the filesystem overhead & the missing bootloader files
+	part_size=$(( build_dir_size + 2 * 1024 ))
 
 	echo "Generating the disk image"
 
