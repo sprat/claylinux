@@ -18,7 +18,8 @@ run() {
 	-netdev "${1:-user}",id=net \
 	-device virtio-net,netdev=net \
 	-device virtio-rng \
-	-cdrom out/claylinux.iso
+	-hda out/claylinux.img
+	#-cdrom out/claylinux.iso
 }
 
 usage() {
