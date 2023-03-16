@@ -65,9 +65,6 @@ generate_files() {
 # generate a disk image with a MBR and a single whole disk partition
 generate_img() {
 	disk_file="$output_dir"/"$name".img
-	disk_label=dos  # for sfdisk
-	syslinux_mbr="$syslinux_dir"/mbr.bin
-	syslinux_mbr_length=440
 	part_file=/tmp/part.img
 	boot_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
 	# add some headroom to account for the filesystem overhead & the missing syslinux bootloader files
@@ -92,15 +89,15 @@ generate_img() {
 
 	# add a single full disk partition formatted as FAT32 -- 0c = FAT32 with LBA
 	sfdisk "$disk_file" <<-EOF
-	label: $disk_label
+	label: dos
 	2MiB - 0c *
 	EOF
 
-	# overwrite the MBR
-	dd if=$syslinux_mbr of="$disk_file" bs=$syslinux_mbr_length count=1 conv=notrunc
-
 	# copy in our partition data into the first partition of the disk image
 	dd if=$part_file of="$disk_file" bs=2M seek=1 conv=notrunc
+
+	# overwrite the MBR
+	dd if="$syslinux_dir"/mbr.bin of="$disk_file" bs=440 count=1 conv=notrunc
 
 	rm -rf $part_file
 }
