@@ -62,8 +62,8 @@ generate_files() {
 	mv "$build_dir"/* "$output_dir"
 }
 
-# generate a disk image with a MBR and a single whole disk partition
-generate_img() {
+# generate a raw disk image with a MBR and a single whole disk partition
+generate_raw() {
 	local disk_file="$output_dir"/"$name".img part_file build_dir_size part_size disk_size
 
 	part_file="$disk_file".part
@@ -134,32 +134,36 @@ generate_iso() {
  	# -isohybrid-gpt-basdat \
 }
 
-usage() {
-	cat <<-EOF
-	Usage: $0 [OPTIONS ...]
-
-	Options:
-	  -f, --format FORMAT       Output format: files | img | iso (default: "$format")
-	  -n, --name NAME           Image filename (default: "$name")
-	  -v, --volume VOLUME       Volume name/label of the boot partition (default: "$volume")
-	  -c, --compression COMP    Compression format for the initramfs: none | gz | xz | zstd
-	EOF
-}
-
 # defaults
 system_dir=/system
 output_dir=/out
 syslinux_dir=/usr/share/syslinux
-format=img
+format=raw
 name=claylinux
 volume=CLAYLINUX
 compression=gz
+
+usage=$(cat <<-EOF
+	Usage: $0 [OPTIONS ...]
+
+	Options:
+	  -f, --format FORMAT       Output format: raw | iso | files (default: $format)
+	  -n, --name NAME           Image file basename (default: $name)
+	  -v, --volume VOLUME       Volume name/label of the boot partition (default: $volume)
+	  -c, --compression COMP    Compression format for the initramfs: none | gz | xz | zstd
+
+	Output formats:
+	  - raw: raw disk image with a single FAT32 boot partition (filename: NAME.img)
+	  - iso: ISO9660 CD-ROM image (filename: NAME.iso)
+	  - files: kernel & initramfs files as is, to be copied into a bootable partition (name not used)
+	EOF
+)
 
 # parse the command-line arguments
 while [[ "$#" -gt 0 ]]; do
 	case "$1" in
 		-h|--help)
-			usage
+			echo "$usage"
 			exit 0
 			;;
 		-f|--format)
