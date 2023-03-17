@@ -68,10 +68,12 @@ generate_img() {
 
 	part_file="$disk_file".part
 	build_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
-	# add some headroom to account for the filesystem overhead & the missing bootloader files
-	part_size=$(( build_dir_size + 2 * 1024 ))
+
+	# add some headroom to account for the filesystem overhead (less than 2%) & the missing bootloader files
+	part_size=$(( (build_dir_size + 512) * 102 / 100  ))
 
 	echo "Generating the disk image"
+	echo "Partition size is $part_size KB"
 
 	# create a FAT32 filesystem
 	mkfs.vfat -n "$volume" -F 32 -C "$part_file" $part_size -v
@@ -80,9 +82,10 @@ generate_img() {
 	# copy the 2nd stage bootloader
 	syslinux --install "$part_file"
 
-	# compute the disk size
-	part_size=$(stat -c %s "$part_file")
-	disk_size=$(( part_size + 1 * 1024 * 1024 ))
+	# compute the disk size in bytes
+	# add 1MB to account for the partition offset
+	# leave 1MB at the end to make sure that the partition fits (seems necessary, not sure why)
+	disk_size=$(( (part_size + 2 * 1024) * 1024 ))
 
 	# create a blank image file
 	dd if=/dev/zero of="$disk_file" bs=$disk_size count=1 conv=notrunc status=none
