@@ -73,7 +73,7 @@ generate_img() {
 	part_size=$(( (build_dir_size + 512) * 102 / 100  ))
 
 	echo "Generating the disk image"
-	echo "Partition size is $part_size KB"
+	echo "boot partition size is $part_size K"
 
 	# create a FAT32 filesystem
 	mkfs.vfat -n "$volume" -F 32 -C "$part_file" $part_size -v
