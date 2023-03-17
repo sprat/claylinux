@@ -5,7 +5,7 @@ FROM alpine:latest AS builder
 RUN apk add --no-cache bash dosfstools mtools pigz sfdisk syslinux xorriso zstd xz
 
 # copy the build script
-COPY build-img /usr/local/bin/
+COPY build-image /usr/local/bin/
 
 WORKDIR /system
-ENTRYPOINT ["build-img"]
+ENTRYPOINT ["build-image"]
