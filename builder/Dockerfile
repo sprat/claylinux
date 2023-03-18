@@ -7,5 +7,5 @@ RUN apk add --no-cache bash dosfstools mtools pigz sfdisk syslinux xorriso zstd 
 # copy the build script
 COPY build-image /usr/local/bin/
 
-WORKDIR /system
+WORKDIR /out
 ENTRYPOINT ["build-image"]
