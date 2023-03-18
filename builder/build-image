@@ -20,7 +20,7 @@ build() {
 
 	popd >/dev/null
 
-	echo "Generating the syslinux configuration"
+	echo "Generating the bootloader configuration"
 	pushd "$build_dir" >/dev/null
 	initrd="$(echo *.img initramfs | tr ' ' ',')"
 	cmdline=$(tr '\n' ' ' <"$system_dir"/boot/cmdline)
