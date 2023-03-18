@@ -40,21 +40,21 @@ build() {
 # compress the initramfs with the specified scheme
 compress() {
 	case "$compression" in
-	none)
-		cat
-		;;
-	gz)
-		pigz -9
-		;;
-	xz)
-		xz -C crc32 -9 -T0
-		;;
-	zstd)
-		zstd -19 -T0
-		;;
-	*)
-		die "invalid compression scheme '$compression'"
-		;;
+		none)
+			cat
+			;;
+		gz)
+			pigz -9
+			;;
+		xz)
+			xz -C crc32 -9 -T0
+			;;
+		zstd)
+			zstd -19 -T0
+			;;
+		*)
+			die "invalid compression scheme '$compression'"
+			;;
 	esac
 }
 
@@ -137,12 +137,12 @@ generate_iso() {
 
 set_format() {
 	case "$1" in
-	raw|iso|files)
-		format="$1"
-		;;
-	*)
-		die "invalid format '$1'"
-		;;
+		raw|iso|files)
+			format="$1"
+			;;
+		*)
+			die "invalid format '$1'"
+			;;
 	esac
 }
 
