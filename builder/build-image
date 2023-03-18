@@ -10,8 +10,6 @@ die() {
 build() {
 	local cmdline initrd
 
-	[[ -d "$root_dir" ]] || die "the root directory '$root_dir' does not exist"
-
 	pushd "$root_dir" >/dev/null
 
 	echo "Copying the boot directory"
@@ -206,6 +204,8 @@ while [[ "$#" -gt 0 ]]; do
 			;;
 	esac
 done
+
+[[ -d "$root_dir" ]] || die "the root directory '$root_dir' does not exist"
 
 build_dir=$(mktemp -d)
 trap 'rm -rf $build_dir' EXIT
