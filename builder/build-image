@@ -134,6 +134,17 @@ generate_iso() {
  	# -isohybrid-gpt-basdat \
 }
 
+set_format() {
+	case "$1" in
+	raw|iso|files)
+		format="$1"
+		;;
+	*)
+		die "Invalid format: $1"
+		;;
+	esac
+}
+
 # defaults
 system_dir=/system
 output_dir=/out
@@ -167,7 +178,7 @@ while [[ "$#" -gt 0 ]]; do
 			exit 0
 			;;
 		-f|--format)
-			format="$2"
+			set_format "$2"
 			shift 2
 			;;
 		-n|--name)
