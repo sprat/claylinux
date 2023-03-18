@@ -202,8 +202,8 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 done
 
-mkdir -p "$output_dir"
 build_dir=$(mktemp -d)
 trap 'rm -rf $build_dir' EXIT
 build
+mkdir -p "$output_dir"
 generate_"$format"
