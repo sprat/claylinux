@@ -161,7 +161,7 @@ usage=$(cat <<-EOF
 	  -f, --format FORMAT       Output format: raw | iso | files (default: $format)
 	  -n, --name NAME           Image file basename (default: $name)
 	  -v, --volume VOLUME       Volume name/label of the boot partition (default: $volume)
-	  -c, --compression COMP    Compression format for the initramfs: none | gz | xz | zstd
+	  -c, --compression COMP    Compression format for the initramfs: none | gz | xz | zstd (default: $compression)
 
 	Output formats:
 	  - raw: raw disk image with a single FAT32 boot partition (filename: NAME.img)
