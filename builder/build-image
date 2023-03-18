@@ -8,22 +8,24 @@ die() {
 
 # build the boot files
 build() {
-	local cmdline initrd
-
 	pushd "$root_dir" >/dev/null
 
 	echo "Copying the boot directory"
-	find ./boot -mindepth 1 -maxdepth 1 ! -name cmdline -exec cp -at "$build_dir" {} +
+	cp -a ./boot/* "$build_dir"
 
 	echo "Generating the initramfs"
 	find . -path ./boot -prune -o -print0 | sort -z | cpio -0oH newc | compress >"$build_dir"/initramfs
 
 	popd >/dev/null
+}
+
+generate_bootloader_config() {
+	local cmdline initrd
 
 	echo "Generating the bootloader configuration"
 	pushd "$build_dir" >/dev/null
 	initrd="$(echo *.img initramfs | tr ' ' ',')"
-	cmdline=$(cat "$root_dir"/boot/cmdline)
+	cmdline=$(cat cmdline && rm cmdline)
 	cat >syslinux.cfg <<-EOF
 	DEFAULT Linux
 	LABEL Linux
@@ -65,6 +67,8 @@ generate_files() {
 generate_raw() {
 	local disk_file part_file build_dir_size part_size disk_size
 
+	generate_bootloader_config
+
 	disk_file="$output".img
 	part_file="$output".part.img
 	build_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
@@ -104,6 +108,8 @@ generate_raw() {
 
 # generate an hybrid ISO image
 generate_iso() {
+	generate_bootloader_config
+
 	echo "Generating the iso image"
 
 	mkdir -p "$build_dir"/syslinux
