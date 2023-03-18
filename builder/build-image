@@ -198,12 +198,9 @@ while [[ "$#" -gt 0 ]]; do
 			;;
 		*)
 			die "Invalid parameter: $1"
-			# POSITIONAL_ARGS+=("$1")
-			# shift
 			;;
 	esac
 done
-# set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 mkdir -p "$output_dir"
 build_dir=$(mktemp -d)
