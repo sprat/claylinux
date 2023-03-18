@@ -10,7 +10,7 @@ die() {
 build() {
 	local cmdline initrd
 
-	pushd "$system_dir" >/dev/null
+	pushd "$root_dir" >/dev/null
 
 	echo "Copying the boot directory"
 	find ./boot -mindepth 1 -maxdepth 1 ! -name cmdline -exec cp -at "$build_dir" {} +
@@ -23,7 +23,7 @@ build() {
 	echo "Generating the bootloader configuration"
 	pushd "$build_dir" >/dev/null
 	initrd="$(echo *.img initramfs | tr ' ' ',')"
-	cmdline=$(tr '\n' ' ' <"$system_dir"/boot/cmdline)
+	cmdline=$(tr '\n' ' ' <"$root_dir"/boot/cmdline)
 	[[ -z "$cmdline" ]] && cmdline="-"
 	cat >syslinux.cfg <<-EOF
 	DEFAULT Linux
@@ -146,7 +146,7 @@ set_format() {
 }
 
 # defaults
-system_dir=/system
+root_dir=/system
 output_dir=/out
 syslinux_dir=/usr/share/syslinux
 format=raw
@@ -160,6 +160,7 @@ usage=$(cat <<-EOF
 	Options:
 	  -f, --format FORMAT       Output format: raw | iso | files (default: $format)
 	  -n, --name NAME           Image file basename (default: $name)
+	  -r, --root DIR            Directory containing the root filesystem (default: $root_dir)
 	  -v, --volume VOLUME       Volume name/label of the boot partition (default: $volume)
 	  -c, --compression COMP    Compression format for the initramfs: none | gz | xz | zstd (default: $compression)
 
@@ -183,6 +184,10 @@ while [[ "$#" -gt 0 ]]; do
 			;;
 		-n|--name)
 			name="$2"
+			shift 2
+			;;
+		-r|--root)
+			root_dir="$2"
 			shift 2
 			;;
 		-v|--volume)
