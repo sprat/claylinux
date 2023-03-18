@@ -23,14 +23,13 @@ build() {
 	echo "Generating the bootloader configuration"
 	pushd "$build_dir" >/dev/null
 	initrd="$(echo *.img initramfs | tr ' ' ',')"
-	cmdline=$(tr '\n' ' ' <"$root_dir"/boot/cmdline)
-	[[ -z "$cmdline" ]] && cmdline="-"
+	cmdline=$(cat "$root_dir"/boot/cmdline)
 	cat >syslinux.cfg <<-EOF
 	DEFAULT Linux
 	LABEL Linux
 	  KERNEL kernel
 	  INITRD $initrd
-	  APPEND $cmdline
+	  APPEND ${cmdline:--}
 	EOF
 	popd >/dev/null
 }
