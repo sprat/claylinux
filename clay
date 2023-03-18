@@ -1,0 +1,68 @@
+#!/bin/bash
+set -euo pipefail
+
+build() {
+	docker buildx bake "$@"
+}
+
+test() {
+	format=raw
+	if [[ -n "${1:-}" ]]; then
+		format=$1
+		shift
+	fi
+
+	docker buildx bake test --set test.args.FORMAT="$format"
+
+	out=out/claylinux
+	boot_opts=()
+	case "$format" in
+		raw)
+			boot_opts=(-hda "$out".img)
+			;;
+		iso)
+			boot_opts=(-cdrom "$out".iso)
+			;;
+		files)
+			boot_opts=(-kernel "$out"/kernel -initrd "$out"/initramfs -append "$(cat $out/cmdline)")
+			;;
+		*)
+			echo "Error: invalid format '$format'"
+			exit 1
+			;;
+	esac
+
+	# machine:
+	# - q35 correspond to a modern PC
+	# - use some accelerators if available: kvm, windows hypervisor platform, or tcg as a fallback
+	qemu-system-x86_64 \
+	-machine q35,accel=kvm:whpx:tcg \
+	-m 1G \
+	-nodefaults \
+	-nographic \
+	-serial mon:stdio \
+	-netdev user,id=net \
+	-device virtio-net,netdev=net \
+	-device virtio-rng \
+	"${boot_opts[@]}"
+}
+
+usage() {
+	cat <<-EOF
+	Usage: $(basename "$0") COMMAND [...]
+
+	Commands:
+	  build [...]    build the docker images
+	  test [FORMAT]  build & run the test OS (with qemu)
+	EOF
+}
+
+case "${1:-}" in
+	build|test)
+		"$@"
+		;;
+	*)
+		usage
+		exit 1
+		;;
+esac
