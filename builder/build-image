@@ -155,7 +155,7 @@ volume=CLAYLINUX
 compression=gz
 
 usage=$(cat <<-EOF
-	Usage: $0 [OPTIONS ...]
+	Usage: $(basename "$0") [OPTIONS ...]
 
 	Options:
 	  -f, --format FORMAT        Output format: raw | iso | files (default: $format)
