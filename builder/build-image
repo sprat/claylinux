@@ -61,14 +61,15 @@ compress() {
 # just copy the build files to the output directory
 generate_files() {
 	echo "Copying the OS files to the output directory"
-	mv "$build_dir"/* "$output_dir"
+	mv "$build_dir" "$output"
 }
 
 # generate a raw disk image with a MBR and a single whole disk partition
 generate_raw() {
-	local disk_file="$output_dir"/"$name".img part_file build_dir_size part_size disk_size
+	local disk_file part_file build_dir_size part_size disk_size
 
-	part_file="$disk_file".part
+	disk_file="$output".img
+	part_file="$output".part.img
 	build_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
 
 	# add some headroom to account for the filesystem overhead (less than 2%) & the missing bootloader files
@@ -106,8 +107,6 @@ generate_raw() {
 
 # generate an hybrid ISO image
 generate_iso() {
-	local iso_file="$output_dir"/"$name".iso
-
 	echo "Generating the iso image"
 
 	mkdir -p "$build_dir"/syslinux
@@ -115,7 +114,7 @@ generate_iso() {
 
 	# see https://wiki.syslinux.org/wiki/index.php?title=Isohybrid
 	xorrisofs \
-	-output "$iso_file" \
+	-output "$output".iso \
 	-isohybrid-mbr "$syslinux_dir"/isohdpfx.bin \
 	-eltorito-catalog syslinux/boot.cat \
 	-eltorito-boot syslinux/isolinux.bin \
@@ -148,11 +147,10 @@ set_format() {
 }
 
 # defaults
-root_dir=/system
-output_dir=/out
 syslinux_dir=/usr/share/syslinux
+root_dir=/system
+output=/out/claylinux
 format=raw
-name=claylinux
 volume=CLAYLINUX
 compression=gz
 
@@ -160,16 +158,16 @@ usage=$(cat <<-EOF
 	Usage: $0 [OPTIONS ...]
 
 	Options:
-	  -f, --format FORMAT       Output format: raw | iso | files (default: $format)
-	  -n, --name NAME           Image file basename (default: $name)
-	  -r, --root DIR            Directory containing the root filesystem (default: $root_dir)
-	  -v, --volume VOLUME       Volume name/label of the boot partition (default: $volume)
-	  -c, --compression COMP    Compression format for the initramfs: none | gz | xz | zstd (default: $compression)
+	  -f, --format FORMAT        Output format: raw | iso | files (default: $format)
+	  -o, --output OUTPUT        Output image path/name, without any extension (default: $output)
+	  -r, --root DIR             Directory containing the root filesystem (default: $root_dir)
+	  -v, --volume VOLUME        Volume name/label of the boot partition (default: $volume)
+	  -c, --compression COMP     Compression format for the initramfs: none | gz | xz | zstd (default: $compression)
 
 	Output formats:
-	  - raw: raw disk image with a single FAT32 boot partition (filename: NAME.img)
-	  - iso: ISO9660 CD-ROM image (filename: NAME.iso)
-	  - files: kernel & initramfs files as is, to be copied into a bootable partition (name not used)
+	  - raw: raw disk image with a single FAT32 boot partition (saved as OUTPUT.img)
+	  - iso: ISO9660 CD-ROM image (saved as OUTPUT.iso)
+	  - files: kernel & initramfs files (saved in OUTPUT directory), for use with a custom boot/bootloader (e.g. PXE)
 	EOF
 )
 
@@ -184,8 +182,8 @@ while [[ "$#" -gt 0 ]]; do
 			set_format "$2"
 			shift 2
 			;;
-		-n|--name)
-			name="$2"
+		-o|--output)
+			output="$2"
 			shift 2
 			;;
 		-r|--root)
@@ -212,5 +210,5 @@ done
 build_dir=$(mktemp -d)
 trap 'rm -rf $build_dir' EXIT
 build
-mkdir -p "$output_dir"
+mkdir -p "$(dirname "$output")"
 generate_"$format"

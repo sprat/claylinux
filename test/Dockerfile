@@ -10,8 +10,8 @@ passwd -d root
 
 # =========================================================
 FROM builder AS build
-ARG FORMAT
-RUN --mount=from=system,target=/system build-image
+ARG FORMAT=raw
+RUN --mount=from=system,target=/system build-image --format $FORMAT
 
 # =========================================================
 FROM scratch AS output
