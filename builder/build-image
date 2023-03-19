@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+# exit with an error message
 die() {
 	echo "Error: $*" >&2
 	exit 1
@@ -14,25 +15,45 @@ build() {
 	cp -a ./boot/* "$build_dir"
 
 	echo "Generating the initramfs"
-	find . -path ./boot -prune -o -print0 | sort -z | cpio -0oH newc | compress >"$build_dir"/initramfs
+	find . -path ./boot -prune -o -print0 | sort -z | cpio -0oH newc | compress >"$build_dir"/initramfs.img
 
 	popd >/dev/null
 }
 
+# find the kernel file
+find_kernel() {
+	find "$1" -name kernel -print
+}
+
+# find the initrd images files
+find_initrd_images() {
+	find "$1" -name '*-ucode.img' -print
+	find "$1" -name initramfs.img -print
+}
+
+# convert a multi-line input into a comma separated list
+comma_separated() {
+	paste -d, -s
+}
+
+# generate the bootloader config
 generate_bootloader_config() {
-	local cmdline initrd
+	local cmdline
 
 	echo "Generating the bootloader configuration"
+
 	pushd "$build_dir" >/dev/null
-	initrd="$(echo *.img initramfs | tr ' ' ',')"
+
 	cmdline=$(cat cmdline && rm cmdline)
 	cat >syslinux.cfg <<-EOF
 	DEFAULT Linux
 	LABEL Linux
-	  KERNEL kernel
-	  INITRD $initrd
+	  KERNEL $(find_kernel .)
+	  INITRD $(find_initrd_images . | comma_separated)
 	  APPEND ${cmdline:--}
 	EOF
+	cat syslinux.cfg
+
 	popd >/dev/null
 }
 
@@ -138,6 +159,7 @@ generate_iso() {
  	# -isohybrid-gpt-basdat \
 }
 
+# validate and set the output format
 set_format() {
 	case "$1" in
 		raw|iso|files)
