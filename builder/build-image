@@ -22,13 +22,13 @@ build() {
 
 # find the kernel file
 find_kernel() {
-	find "$1" -name kernel -print
+	find "$1" -name kernel -print | cut -c3-
 }
 
 # find the initrd images files
 find_initrd_images() {
-	find "$1" -name '*-ucode.img' -print
-	find "$1" -name initramfs.img -print
+	find "$1" -name '*-ucode.img' -print | cut -c3-
+	find "$1" -name initramfs.img -print | cut -c3-
 }
 
 # convert a multi-line input into a comma separated list
