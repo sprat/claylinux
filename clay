@@ -24,7 +24,7 @@ test() {
 			boot_opts=(-cdrom "$out".iso)
 			;;
 		files)
-			boot_opts=(-kernel "$out"/kernel -initrd "$out"/initramfs -append "$(cat $out/cmdline)")
+			boot_opts=(-kernel "$out"/kernel -initrd "$out"/initramfs.img -append "$(cat $out/cmdline)")
 			;;
 		*)
 			echo "Error: invalid format '$format'"
