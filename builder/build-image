@@ -113,7 +113,7 @@ generate_raw() {
 	disk_size=$(( (part_size + 2 * 1024) * 1024 ))
 
 	# create a blank image file
-	dd if=/dev/zero of="$disk_file" bs=$disk_size count=1 conv=notrunc status=none
+	truncate -s $disk_size "$disk_file"
 
 	# add a single full disk partition formatted as FAT32 with LBA
 	echo "start=1MiB type=0c bootable" | sfdisk --no-reread --label dos "$disk_file"
