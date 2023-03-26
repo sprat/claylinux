@@ -22,13 +22,13 @@ build() {
 
 # find the kernel file
 find_kernel() {
-	find "$1" -name kernel -print | cut -c3-
+	find . -name kernel -print | cut -c2-
 }
 
 # find the initrd images files
 find_initrd_images() {
-	find "$1" -name '*-ucode.img' -print | cut -c3-
-	find "$1" -name initramfs.img -print | cut -c3-
+	find . -name '*-ucode.img' -print | cut -c2-
+	find . -name initramfs.img -print | cut -c2-
 }
 
 # convert a multi-line input into a comma separated list
@@ -48,8 +48,8 @@ generate_bootloader_config() {
 	cat >syslinux.cfg <<-EOF
 	DEFAULT Linux
 	LABEL Linux
-	  KERNEL $(find_kernel .)
-	  INITRD $(find_initrd_images . | comma_separated)
+	  KERNEL $(find_kernel)
+	  INITRD $(find_initrd_images | comma_separated)
 	  APPEND ${cmdline:--}
 	EOF
 	cat syslinux.cfg
