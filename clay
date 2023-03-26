@@ -18,7 +18,7 @@ test() {
 	boot_opts=()
 	case "$format" in
 		raw)
-			boot_opts=(-drive "format=raw,file=$out.img")
+			boot_opts=(-drive "file=$out.img,format=raw")
 			;;
 		iso)
 			boot_opts=(-drive "file=$out.iso,media=cdrom")
