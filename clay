@@ -18,10 +18,10 @@ test() {
 	boot_opts=()
 	case "$format" in
 		raw)
-			boot_opts=(-hda "$out".img)
+			boot_opts=(-drive "format=raw,file=$out.img")
 			;;
 		iso)
-			boot_opts=(-cdrom "$out".iso)
+			boot_opts=(-drive "file=$out.iso,media=cdrom")
 			;;
 		files)
 			boot_opts=(-kernel "$out"/kernel -initrd "$out"/initramfs.img -append "$(cat $out/cmdline)")
