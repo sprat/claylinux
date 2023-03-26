@@ -121,10 +121,11 @@ generate_raw() {
 	# copy in our partition data into the first partition of the disk image
 	dd if="$part_file" of="$disk_file" bs=1M seek=1 conv=notrunc status=none
 
+	# delete the part file
+	rm -rf "$part_file"
+
 	# copy the 1st stage bootloader in the MBR
 	dd if="$syslinux_dir"/mbr.bin of="$disk_file" bs=440 count=1 conv=notrunc status=none
-
-	rm -rf "$part_file"
 }
 
 # generate an hybrid ISO image
