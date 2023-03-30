@@ -18,13 +18,13 @@ test() {
 	boot_opts=()
 	case "$format" in
 		raw)
-			boot_opts=(-drive "file=$out.img,format=raw")
+			boot_opts+=(-drive "file=$out.img,format=raw")
 			;;
 		iso)
-			boot_opts=(-drive "file=$out.iso,media=cdrom")
+			boot_opts+=(-drive "file=$out.iso,media=cdrom")
 			;;
 		files)
-			boot_opts=(-kernel "$out"/kernel -initrd "$out"/initramfs.img -append "$(cat $out/cmdline)")
+			boot_opts+=(-kernel "$out"/kernel -initrd "$out"/initramfs.img -append "$(cat $out/cmdline)")
 			;;
 		*)
 			echo "Error: invalid format '$format'"
