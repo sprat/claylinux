@@ -3,6 +3,7 @@ include:
   - project: 'sprat/gitlab-ci'
     file:
       - '/templates/shellcheck.yml'
+      - '/templates/hadolint.yml'
       - '/templates/docker.yml'
 
 stages:
@@ -11,6 +12,9 @@ stages:
 
 shellcheck:
   extends: .shellcheck
+
+hadolint:
+  extends: .hadolint
 
 build:
   extends:
