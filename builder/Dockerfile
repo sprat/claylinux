@@ -1,11 +1,12 @@
 # syntax=docker/dockerfile:1
-FROM alpine:latest AS builder
+FROM alpine:3 AS builder
+SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 
 # add the necessary tools to generate the OS
-RUN set -euo pipefail; \
-PACKAGES="bash dosfstools file mtools pigz sfdisk xorriso zstd xz"; \
-[[ "$(uname -m)" == x86* ]] && PACKAGES="$PACKAGES syslinux"; \
-apk add --no-cache $PACKAGES
+# syslinux is not available on non-PC platforms
+RUN \
+apk add --no-cache bash dosfstools file mtools pigz sfdisk xorriso zstd xz; \
+apk add --no-cache syslinux || true
 
 # copy the build script
 COPY build-image /usr/local/bin/

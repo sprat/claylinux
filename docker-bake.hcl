@@ -35,7 +35,7 @@ target "alpine-virt" {
 target "test" {
     context = "test"
     contexts = {
-        base = "target:alpine-virt"
+        alpine = "target:alpine-virt"
         builder = "target:builder"
     }
     output = ["type=local,dest=out"]
