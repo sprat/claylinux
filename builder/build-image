@@ -7,45 +7,108 @@ die() {
 	exit 1
 }
 
-# build the boot files
-build() {
-	pushd "$root_dir" >/dev/null
+# get the size of the file in bytes
+get_size() {
+	stat -c %s "$1"
+}
 
-	echo "Copying the boot directory"
-	cp -a ./boot/* "$build_dir"
+# convert a number of bytes into MiB (i.e. 1024 * 1024 bytes), rounded to the next value
+in_mib() {
+	echo $(( ($1 + (1<<20) - 1) >> 20 ))
+}
+
+# get the size of the file in mibytes
+get_size_mib() {
+	in_mib "$(get_size "$1")"
+}
+
+# round the value given in $1 to the next multiple of the value given in $2
+# e.g. align 9 4 -> 12, align 8 4 -> 8
+align() {
+	echo "$(( ($1 + $2 - 1) / $2 * $2 ))"
+}
+
+# build the EFI binary
+build() {
+	local size kernel
 
 	echo "Generating the initramfs"
-	find . -path ./boot -prune -o -print0 | sort -z | cpio -0oH newc | compress >"$build_dir"/initramfs.img
+	pushd "$root_dir" >/dev/null
+	find ./boot -name '*-ucode.img' -print0 | xargs -0 cat >"$build_dir"/initrd
+	find . -path ./boot -prune -o -print0 | sort -z | cpio -0oH newc | compress >>"$build_dir"/initrd
+	size=$(get_size_mib "$build_dir"/initrd)
+	echo "The size of the initramfs is: $size MiB"
+	popd >/dev/null
 
+	echo "Building the EFI executable"
+	pushd "$build_dir" >/dev/null
+	kernel=$(find "$root_dir"/boot -name 'vmlinu*' -print)
+	space_separated <"$root_dir"/boot/cmdline >./cmdline
+	basename "$root_dir"/lib/modules/* >./uname
+
+	# create the EFI UKI file
+	create_uki <<-EOF
+	.osrel $root_dir/etc/os-release
+	.uname ./uname
+	.cmdline ./cmdline
+	.initrd ./initrd
+	.linux $kernel
+	EOF
+	# TODO: add .dtb section on ARM?
+	rm -rf ./uname ./cmdline ./initrd
 	popd >/dev/null
 }
 
-# find the kernel file
-find_kernel() {
-	find . -name 'vmlinu*' -print | cut -c3-
+# create a Unified Kernel Image from the sections passed in the standard input
+create_uki() {
+	# the initrd section address should be aligned to PAGE_ALIGN(), i.e. 2<<12 == 4096 bytes
+	local args=() alignment=4096 size offset
+
+	# compute the start offset of the new sections
+	offset="$(objdump -h -w "$efi_stub" | awk 'END { offset=("0x"$4)+0; size=("0x"$3)+0; print offset + size }')"
+	offset=$(align "$offset" $alignment)
+
+	# compute the objcopy arguments
+	while read -r section file
+	do
+		# add the section to the parameters
+		args+=(
+			--add-section
+			"$section=$file"
+			--change-section-vma
+			"$section=$offset"
+		)
+
+		# compute the offset for the next section
+		size="$(get_size "$file")"
+		size=$(align "$size" $alignment)
+		offset=$(( offset + size ))
+	done
+
+	objcopy "${args[@]}" "$efi_stub" "$efi_file"
 }
 
-# find the initrd images files
-find_initrd_images() {
-	find . -name '*-ucode.img' -print | cut -c3-
-	find . -name initramfs.img -print | cut -c3-
-}
-
-# add a prefix to each line
-add_prefix() {
-	sed -e "s|^|$1|"
-}
-
-# format and delete the cmdline
-format_and_delete_cmdline() {
-	result=$(space_separated <cmdline)
-	rm cmdline
-	echo "$result"
-}
-
-# convert a multi-line input into a comma separated list
-comma_separated() {
-	paste -d, -s
+# detect the current EFI architecture
+efi_arch() {
+	local machine_arch
+	machine_arch="$(uname -m)"
+	case "$machine_arch" in
+		aarch64)
+			echo "aa64"
+			;;
+		arm*)
+			echo "arm"
+			;;
+		i686)
+			echo "ia32"
+			;;
+		x86_64)
+			echo "x64"
+			;;
+		*)
+			die "unsupported architecture: $machine_arch"
+			;;
+	esac
 }
 
 # convert a multi-line input into a space separated list
@@ -53,40 +116,9 @@ space_separated() {
 	paste -d' ' -s
 }
 
-# generate the bootloader config
-generate_bootloader_config() {
-	echo "Generating the bootloader configuration"
-
-	pushd "$build_dir" >/dev/null
-
-	cat >limine.cfg <<-EOF
-	TIMEOUT=0
-	GRAPHICS=no
-	SERIAL=yes
-
-	:Linux
-	PROTOCOL=linux
-	$(find_kernel | add_prefix 'KERNEL_PATH=boot:///')
-	$(find_initrd_images | add_prefix 'MODULE_PATH=boot:///')
-	KERNEL_CMDLINE=$(format_and_delete_cmdline)
-	EOF
-
-	popd >/dev/null
-}
-
-# generate a boot environment
-generate_boot_env() {
-	pushd "$build_dir" >/dev/null
-
-	echo "Generating the boot env file"""
-
-	cat >boot.env <<-EOF
-	KERNEL="$(find_kernel)"
-	INITRD="$(find_initrd_images | space_separated)"
-	CMDLINE="$(format_and_delete_cmdline)"
-	EOF
-
-	popd >/dev/null
+# convert to uppercase
+uppercase() {
+	tr '[:lower:]' '[:upper:]'
 }
 
 # compress the initramfs with the specified scheme
@@ -111,59 +143,64 @@ compress() {
 }
 
 # just copy the build files to the output directory
-generate_files() {
+generate_efi() {
 	echo "Copying the OS files to the output directory"
-	generate_boot_env
-	mv "$build_dir" "$output"
+	cp "$efi_file" "$output".efi
 }
 
-# generate a raw disk image with a MBR and a single whole disk partition
-generate_raw() {
-	local disk_file part_file files_size part_size disk_size
+generate_esp() {
+	local efi_arch size
 
-	generate_bootloader_config
+	echo "Generating the EFI System Partition (ESP)"
 
-	disk_file="$output".img
-	part_file="$output".part.img
-
-	files_size=$(du -sb "$build_dir" | cut -f1)  # apparent size in bytes
-	# compute the boot partition size:
+	# compute the ESP size:
+	# - measure the apparent size of the files to copy, in bytes
 	# - add some headroom to account for the filesystem overhead (less than 2%)
-	# - add 512K for the bootloader files which are not taken into account in the calculation
-	# - round to the next MiB (1<<20)
-	# - convert the result to MiB
-	part_size=$(( ((files_size * 102 / 100 + (1<<19)) + (1<<20) - 1) >> 20 ))
-	# compute the disk size in bytes: add 1MB at both ends for the partition tables
-	disk_size=$(( part_size + 2 ))
+	# - convert the result into MiB
+	size=$(get_size "$efi_file")
+	size=$(in_mib $(( size * 102 / 100 )))
+	echo "The size of the ESP is: $size MiB"
+
+	# get the current EFI architecture
+	efi_arch=$(efi_arch | uppercase)
+
+	# create the FAT32 filesystem
+	mkfs.vfat -n "$volume" -F 32 -C "$esp_file" "$(( size << 10 ))" -v
+
+	# copy the EFI executable into the filesystem
+	mmd -i "$esp_file" ::/EFI
+	mmd -i "$esp_file" ::/EFI/BOOT
+	mcopy -i "$esp_file" "$efi_file" "::/EFI/BOOT/BOOT${efi_arch}.EFI"
+
+	rm "$efi_file"
+}
+
+# generate a raw disk image with a single whole disk FAT32 EFI partition on GPT
+generate_raw() {
+	local disk_file esp_size disk_size
+
+	generate_esp
 
 	echo "Generating the disk image"
-	echo "The size of the boot partition will be ${part_size} MiB"
+	disk_file="$output".img
 
-	# create a FAT32 filesystem
-	mkfs.vfat -n "$volume" -F 32 -C "$part_file" "$(( part_size << 10 ))" -v
-	# copy the system boot files (i.e. kernel, initramfs, etc.)
-	mcopy -i "$part_file" "$build_dir"/* ::/
-	# copy the 2nd stage bootloader
-	mmd -i "$part_file" ::/limine
-	mcopy -i "$part_file" "$limine_dir"/limine.sys ::/limine
+	# compute the disk size in bytes: get the ESP size and add 1MB at both ends for the partition tables
+	esp_size=$(get_size_mib "$esp_file")
+	disk_size=$(( esp_size + 2 ))
+	echo "The size of the disk image is: $disk_size MiB"
 
 	# create a blank image file
 	truncate -s ${disk_size}M "$disk_file"
 
 	# add a single full disk partition formatted as FAT32 with LBA
 	sfdisk "$disk_file" <<-EOF
-	label: dos
-	start=1MiB size=${part_size}MiB type=0c bootable
+	label: gpt
+	first-lba: 34
+	start=1MiB size=${esp_size}MiB name="EFI system partition" type=uefi
 	EOF
 
-	# copy in our partition data into the first partition of the disk image
-	dd if="$part_file" of="$disk_file" bs=1M seek=1 conv=notrunc status=none
-
-	# delete the part file
-	rm -rf "$part_file"
-
-	# copy the 1st stage bootloader in the MBR
-	limine-deploy "$disk_file"
+ 	# copy in our partition data into the first partition of the disk image
+	dd if="$esp_file" of="$disk_file" bs=1M seek=1 conv=notrunc status=none
 }
 
 # generate a disk image in qcow2 format
@@ -177,21 +214,13 @@ generate_qcow2() {
 
 # generate an hybrid ISO image
 generate_iso() {
-	generate_bootloader_config
+	generate_esp
 
 	echo "Generating the iso image"
 
-	mkdir -p "$build_dir"/limine
-	cp "$limine_dir"/limine.sys "$limine_dir"/limine-cd.bin "$limine_dir"/limine-cd-efi.bin "$build_dir"/limine
-
 	xorrisofs \
-	-eltorito-boot limine/limine-cd.bin \
+	-e "$(basename "$esp_file")" \
 	-no-emul-boot \
-	-boot-load-size 4 \
-	-boot-info-table \
-	--efi-boot limine/limine-cd-efi.bin \
-	-efi-boot-part --efi-boot-image \
-	--protective-msdos-label \
 	-joliet \
 	-full-iso9660-filenames \
 	-rational-rock \
@@ -199,14 +228,12 @@ generate_iso() {
 	-volid "$volume" \
 	-output "$output".iso \
 	"$build_dir"
-
-	limine-deploy "$output".iso
 }
 
 # validate and set the output format
 set_format() {
 	case "$1" in
-		raw|qcow2|iso|files)
+		efi|raw|qcow2|iso)
 			format="$1"
 			;;
 		*)
@@ -216,12 +243,12 @@ set_format() {
 }
 
 # defaults
-limine_dir=/usr/share/limine
 root_dir=/system
 output=/out/claylinux
 format=raw
 volume=CLAYLINUX
 compression=gz
+efi_stub="/usr/lib/gummiboot/linux$(efi_arch).efi.stub"
 
 usage=$(cat <<-EOF
 	Usage: $(basename "$0") [OPTIONS ...]
@@ -234,10 +261,10 @@ usage=$(cat <<-EOF
 	  -c, --compression COMP     Compression format for the initramfs: none | gz | xz | zstd (default: $compression)
 
 	Output formats:
+	  - efi: EFI executable (saved as OUTPUT.efi), for use with a custom bootloader or with PXE boot
 	  - raw: raw disk image with a single FAT32 boot partition (saved as OUTPUT.img)
 	  - qcow2: disk image in QCOW2 format (saved as OUTPUT.qcow2)
 	  - iso: ISO9660 CD-ROM image (saved as OUTPUT.iso)
-	  - files: kernel & initramfs files (saved in OUTPUT directory), for use with a custom boot/bootloader (e.g. PXE)
 	EOF
 )
 
@@ -281,6 +308,9 @@ done
 
 build_dir=$(mktemp -d)
 trap 'rm -rf $build_dir' EXIT
+
+efi_file="$build_dir"/claylinux.efi
+esp_file="$build_dir"/claylinux.esp
 build
 mkdir -p "$(dirname "$output")"
 generate_"$format"
