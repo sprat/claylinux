@@ -86,37 +86,40 @@ generate_files() {
 
 # generate a raw disk image with a MBR and a single whole disk partition
 generate_raw() {
-	local disk_file part_file build_dir_size part_size disk_size
+	local disk_file part_file files_size part_size disk_size
 
 	generate_bootloader_config
 
 	disk_file="$output".img
 	part_file="$output".part.img
-	build_dir_size=$(du -sk "$build_dir" | cut -f1)  # in KB
 
-	# add some headroom to account for the filesystem overhead (less than 2%) & the missing bootloader files
-	part_size=$(( (build_dir_size + 512) * 102 / 100  ))
+	files_size=$(du -sb "$build_dir" | cut -f1)  # apparent size in bytes
+	# compute the boot partition size:
+	# - add some headroom to account for the filesystem overhead (less than 2%)
+	# - add 512K for the bootloader files which are not taken into account in the calculation
+	# - round to the next MiB (1<<20)
+	# - convert the result to MiB
+	part_size=$(( ((files_size * 102 / 100 + (1<<19)) + (1<<20) - 1) >> 20 ))
+	# compute the disk size in bytes: add 1MB at both ends for the partition tables
+	disk_size=$(( part_size + 2 ))
 
 	echo "Generating the disk image"
-	echo "boot partition size is $part_size K"
+	echo "The size of the boot partition will be ${part_size} MiB"
 
 	# create a FAT32 filesystem
-	mkfs.vfat -n "$volume" -F 32 -C "$part_file" $part_size -v
+	mkfs.vfat -n "$volume" -F 32 -C "$part_file" "$(( part_size << 10 ))" -v
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
 	mcopy -i "$part_file" "$build_dir"/* ::/
 	# copy the 2nd stage bootloader
 	syslinux --install "$part_file"
 
-	# compute the disk size in bytes
-	# add 1MB to account for the partition offset
-	# leave 1MB at the end to make sure that the partition fits (seems necessary, not sure why)
-	disk_size=$(( (part_size + 2 * 1024) * 1024 ))
-
 	# create a blank image file
-	truncate -s $disk_size "$disk_file"
+	truncate -s ${disk_size}M "$disk_file"
 
 	# add a single full disk partition formatted as FAT32 with LBA
-	echo "start=1MiB type=0c bootable" | sfdisk --no-reread --label dos "$disk_file"
+	sfdisk --no-reread --label dos "$disk_file" <<-EOF
+	start=1MiB size=${part_size}MiB type=0c bootable
+	EOF
 
 	# copy in our partition data into the first partition of the disk image
 	dd if="$part_file" of="$disk_file" bs=1M seek=1 conv=notrunc status=none
