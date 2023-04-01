@@ -19,9 +19,6 @@ rm -rf /out/dev/*
 ARG FLAVOR=lts
 RUN \
 apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.*; \
-mv /out/boot/vmlinuz-$FLAVOR /out/boot/kernel; \
-mv /out/boot/config-$FLAVOR /out/boot/config; \
-rm /out/boot/System.map-$FLAVOR; \
 touch /out/boot/cmdline
 
 # copy our custom init script
