@@ -13,7 +13,7 @@ test() {
 	fi
 
 	# build the test OS image
-	docker buildx bake test --set test.args.FORMAT="$format"
+	docker buildx bake test --set test.args.FORMAT="$format" "$@"
 
 	qemu_bin=qemu-system-x86_64
 	accelerator=kvm
