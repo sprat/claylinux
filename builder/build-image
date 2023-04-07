@@ -22,13 +22,18 @@ build() {
 
 # find the kernel file
 find_kernel() {
-	find . -name 'vmlinu*' -print | cut -c2-
+	find . -name 'vmlinu*' -print | cut -c3-
 }
 
 # find the initrd images files
 find_initrd_images() {
-	find . -name '*-ucode.img' -print | cut -c2-
-	find . -name initramfs.img -print | cut -c2-
+	find . -name '*-ucode.img' -print | cut -c3-
+	find . -name initramfs.img -print | cut -c3-
+}
+
+# add a prefix to each line
+add_prefix() {
+	sed -e "s|^|$1|"
 }
 
 # format and delete the cmdline
@@ -50,13 +55,10 @@ space_separated() {
 
 # generate the bootloader config
 generate_bootloader_config() {
-	local cmdline
-
 	echo "Generating the bootloader configuration"
 
 	pushd "$build_dir" >/dev/null
 
-	cmdline=$(format_and_delete_cmdline)
 	cat >limine.cfg <<-EOF
 	TIMEOUT=0
 	GRAPHICS=no
@@ -64,9 +66,9 @@ generate_bootloader_config() {
 
 	:Linux
 	PROTOCOL=linux
-	KERNEL_PATH=boot://$(find_kernel)
-	$(for module in $(find_initrd_images); do echo "MODULE_PATH=boot://$module"; done)
-	KERNEL_CMDLINE=$cmdline
+	$(find_kernel | add_prefix 'KERNEL_PATH=boot:///')
+	$(find_initrd_images | add_prefix 'MODULE_PATH=boot:///')
+	KERNEL_CMDLINE=$(format_and_delete_cmdline)
 	EOF
 
 	popd >/dev/null
