@@ -12,21 +12,30 @@ test() {
 		shift
 	fi
 
+	# build the test OS image
 	docker buildx bake test --set test.args.FORMAT="$format"
 
-	out=out/claylinux
-	boot_opts=()
+	qemu_bin=qemu-system-x86_64
+	accelerator=kvm
+
+	# special case for WSL on Microsoft Windows
+	if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+		qemu_bin=${qemu_bin}.exe
+		accelerator=whpx
+	fi
+
+	name=out/claylinux
 	case "$format" in
 		raw)
-			boot_opts+=(-drive "file=$out.img,format=raw")
+			boot_opts=(-drive "file=${name}.img,format=raw")
 			;;
 		iso)
-			boot_opts+=(-drive "file=$out.iso,media=cdrom")
+			boot_opts=(-drive "file=${name}.iso,media=cdrom")
 			;;
 		files)
 			# shellcheck source=/dev/null
-			source "$out"/boot.env
-			boot_opts+=(-kernel "$out"/"$KERNEL" -initrd "$out"/initramfs.img -append "$CMDLINE")
+			source "${name}"/boot.env
+			boot_opts=(-kernel "${name}"/"$KERNEL" -initrd "${name}"/initramfs.img -append "$CMDLINE")
 			;;
 		*)
 			echo "Error: invalid format '$format'"
@@ -37,8 +46,8 @@ test() {
 	# machine:
 	# - q35 correspond to a modern PC
 	# - use some accelerators if available: kvm, windows hypervisor platform, or tcg as a fallback
-	qemu-system-x86_64 \
-	-machine q35,accel=kvm:whpx:tcg \
+	"$qemu_bin" \
+	-machine q35,accel=${accelerator}:tcg \
 	-m 1G \
 	-nodefaults \
 	-nographic \
