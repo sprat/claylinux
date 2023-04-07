@@ -57,12 +57,16 @@ generate_bootloader_config() {
 	pushd "$build_dir" >/dev/null
 
 	cmdline=$(format_and_delete_cmdline)
-	cat >syslinux.cfg <<-EOF
-	DEFAULT Linux
-	LABEL Linux
-	  KERNEL $(find_kernel)
-	  INITRD $(find_initrd_images | comma_separated)
-	  APPEND ${cmdline:--}
+	cat >limine.cfg <<-EOF
+	TIMEOUT=0
+	GRAPHICS=no
+	SERIAL=yes
+
+	:Linux
+	PROTOCOL=linux
+	KERNEL_PATH=boot://$(find_kernel)
+	$(for module in $(find_initrd_images); do echo "MODULE_PATH=boot://$module"; done)
+	KERNEL_CMDLINE=$cmdline
 	EOF
 
 	popd >/dev/null
@@ -138,7 +142,8 @@ generate_raw() {
 	# copy the system boot files (i.e. kernel, initramfs, etc.)
 	mcopy -i "$part_file" "$build_dir"/* ::/
 	# copy the 2nd stage bootloader
-	syslinux --install "$part_file"
+	mmd -i "$part_file" ::/limine
+	mcopy -i "$part_file" "$limine_dir"/limine.sys ::/limine
 
 	# create a blank image file
 	truncate -s ${disk_size}M "$disk_file"
@@ -155,7 +160,7 @@ generate_raw() {
 	rm -rf "$part_file"
 
 	# copy the 1st stage bootloader in the MBR
-	dd if="$syslinux_dir"/mbr.bin of="$disk_file" bs=440 count=1 conv=notrunc status=none
+	limine-deploy "$disk_file"
 }
 
 # generate an hybrid ISO image
@@ -164,30 +169,26 @@ generate_iso() {
 
 	echo "Generating the iso image"
 
-	mkdir -p "$build_dir"/syslinux
-	cp "$syslinux_dir"/isolinux.bin "$syslinux_dir"/ldlinux.c32 "$build_dir"/syslinux
+	mkdir -p "$build_dir"/limine
+	cp "$limine_dir"/limine.sys "$limine_dir"/limine-cd.bin "$limine_dir"/limine-cd-efi.bin "$build_dir"/limine
 
-	# see https://wiki.syslinux.org/wiki/index.php?title=Isohybrid
 	xorrisofs \
-	-output "$output".iso \
-	-isohybrid-mbr "$syslinux_dir"/isohdpfx.bin \
-	-eltorito-catalog syslinux/boot.cat \
-	-eltorito-boot syslinux/isolinux.bin \
+	-eltorito-boot limine/limine-cd.bin \
 	-no-emul-boot \
 	-boot-load-size 4 \
 	-boot-info-table \
+	--efi-boot limine/limine-cd-efi.bin \
+	-efi-boot-part --efi-boot-image \
+	--protective-msdos-label \
 	-joliet \
 	-full-iso9660-filenames \
 	-rational-rock \
 	-sysid LINUX \
 	-volid "$volume" \
+	-output "$output".iso \
 	"$build_dir"
 
-	# TODO: add UEFI options, or create a separate format to support UEFI iso
-	# -eltorito-alt-boot \
- 	# -eltorito-platform 0xEF \
- 	# -eltorito-boot syslinux/efiboot.img \
- 	# -isohybrid-gpt-basdat \
+	limine-deploy "$output".iso
 }
 
 # validate and set the output format
@@ -203,7 +204,7 @@ set_format() {
 }
 
 # defaults
-syslinux_dir=/usr/share/syslinux
+limine_dir=/usr/share/limine
 root_dir=/system
 output=/out/claylinux
 format=raw
