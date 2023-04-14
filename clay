@@ -48,7 +48,7 @@ test() {
 	# - use some accelerators if available: kvm, windows hypervisor platform, or tcg as a fallback
 	"$qemu_bin" \
 	-machine q35,accel=${accelerator}:tcg \
-	-m 1G \
+	-m 2G \
 	-nodefaults \
 	-nographic \
 	-serial mon:stdio \
