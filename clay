@@ -1,16 +1,43 @@
 #!/bin/bash
 set -euo pipefail
 
+# exit with an error message
+die() {
+	echo "Error: $*" >&2
+	exit 1
+}
+
 build() {
 	docker buildx bake "$@"
 }
 
 test() {
-	format=raw
-	if [[ -n "${1:-}" ]]; then
-		format=$1
-		shift
+	format="${1:-}"
+	if [[ -z "$format" ]]; then
+		die "you should specify an output format"
 	fi
+	shift
+
+	name=out/claylinux
+	case "$format" in
+		files)
+			# shellcheck source=/dev/null
+			source "${name}"/boot.env
+			boot_opts=(-kernel "${name}"/"$KERNEL" -initrd "${name}"/initramfs.img -append "$CMDLINE")
+			;;
+		raw)
+			boot_opts=(-drive "file=${name}.img,format=raw")
+			;;
+		qcow2)
+			boot_opts=(-drive "file=${name}.qcow2,format=qcow2")
+			;;
+		iso)
+			boot_opts=(-drive "file=${name}.iso,media=cdrom")
+			;;
+		*)
+			die "invalid format '$format'"
+			;;
+	esac
 
 	# build the test OS image
 	docker buildx bake test --set test.args.FORMAT="$format" "$@"
@@ -23,28 +50,6 @@ test() {
 		qemu_bin=${qemu_bin}.exe
 		accelerator=whpx
 	fi
-
-	name=out/claylinux
-	case "$format" in
-		raw)
-			boot_opts=(-drive "file=${name}.img,format=raw")
-			;;
-		qcow2)
-			boot_opts=(-drive "file=${name}.qcow2,format=qcow2")
-			;;
-		iso)
-			boot_opts=(-drive "file=${name}.iso,media=cdrom")
-			;;
-		files)
-			# shellcheck source=/dev/null
-			source "${name}"/boot.env
-			boot_opts=(-kernel "${name}"/"$KERNEL" -initrd "${name}"/initramfs.img -append "$CMDLINE")
-			;;
-		*)
-			echo "Error: invalid format '$format'"
-			exit 1
-			;;
-	esac
 
 	# machine:
 	# - q35 correspond to a modern PC
@@ -66,8 +71,8 @@ usage() {
 	Usage: $(basename "$0") COMMAND [...]
 
 	Commands:
-	  build [...]    build the docker images
-	  test [FORMAT]  build & run the test OS (with qemu)
+	  build [...]    build the docker images for a release
+	  test FORMAT    build & run the test OS with qemu
 	EOF
 }
 
