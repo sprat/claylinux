@@ -151,7 +151,8 @@ generate_raw() {
 	truncate -s ${disk_size}M "$disk_file"
 
 	# add a single full disk partition formatted as FAT32 with LBA
-	sfdisk --no-reread --label dos "$disk_file" <<-EOF
+	sfdisk "$disk_file" <<-EOF
+	label: dos
 	start=1MiB size=${part_size}MiB type=0c bootable
 	EOF
 
