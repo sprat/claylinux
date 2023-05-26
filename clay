@@ -48,14 +48,16 @@ test() {
 	# special case for WSL on Microsoft Windows
 	if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
 		qemu_bin=${qemu_bin}.exe
-		accelerator=whpx
+		accelerator=whpx,kernel-irqchip=off
 	fi
 
 	# machine:
 	# - q35 correspond to a modern PC
-	# - use some accelerators if available: kvm, windows hypervisor platform, or tcg as a fallback
+	# - use the proper accelerator
 	"$qemu_bin" \
-	-machine q35,accel=${accelerator}:tcg \
+	-machine q35 \
+	-accel ${accelerator} \
+	-boot d \
 	-m 2G \
 	-nodefaults \
 	-nographic \
