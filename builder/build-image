@@ -165,6 +165,15 @@ generate_raw() {
 	limine-deploy "$disk_file"
 }
 
+# generate a disk image in qcow2 format
+generate_qcow2() {
+	generate_raw
+
+	echo "Converting the disk image to qcow2 format"
+	qemu-img convert -f raw -O qcow2 "$output".img "$output".qcow2
+	rm "$output".img
+}
+
 # generate an hybrid ISO image
 generate_iso() {
 	generate_bootloader_config
@@ -196,7 +205,7 @@ generate_iso() {
 # validate and set the output format
 set_format() {
 	case "$1" in
-		raw|iso|files)
+		raw|qcow2|iso|files)
 			format="$1"
 			;;
 		*)
@@ -225,6 +234,7 @@ usage=$(cat <<-EOF
 
 	Output formats:
 	  - raw: raw disk image with a single FAT32 boot partition (saved as OUTPUT.img)
+	  - qcow2: disk image in QCOW2 format (saved as OUTPUT.qcow2)
 	  - iso: ISO9660 CD-ROM image (saved as OUTPUT.iso)
 	  - files: kernel & initramfs files (saved in OUTPUT directory), for use with a custom boot/bootloader (e.g. PXE)
 	EOF

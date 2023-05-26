@@ -29,6 +29,9 @@ test() {
 		raw)
 			boot_opts=(-drive "file=${name}.img,format=raw")
 			;;
+		qcow2)
+			boot_opts=(-drive "file=${name}.qcow2,format=qcow2")
+			;;
 		iso)
 			boot_opts=(-drive "file=${name}.iso,media=cdrom")
 			;;
