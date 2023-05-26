@@ -1,4 +1,6 @@
 # syntax=docker/dockerfile:1
+
+# Setup our custom OS
 # hadolint ignore=DL3006
 FROM alpine AS system
 
@@ -8,11 +10,13 @@ FROM alpine AS system
 RUN apk add --no-cache intel-ucode amd-ucode && passwd -d root
 
 # =========================================================
+# Generate the OS image
 # hadolint ignore=DL3006
-FROM builder AS build
+FROM builder AS image
 ARG FORMAT=raw
 RUN --mount=from=system,target=/system build-image --format $FORMAT
 
 # =========================================================
+# Save our image into the output directory
 FROM scratch AS output
-COPY --from=build /out /
+COPY --from=image /out /
