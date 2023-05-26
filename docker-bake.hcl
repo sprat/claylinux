@@ -18,7 +18,7 @@ target "builder" {
 # TODO: we should factor the alpine images
 target "alpine-lts" {
     context = "alpine"
-    tags = ["${NAMESPACE}alpine:${TAG}-lts"]
+    tags = ["${NAMESPACE}alpine-lts:${TAG}"]
     args = {
         FLAVOR = "lts"
     }
@@ -26,7 +26,7 @@ target "alpine-lts" {
 
 target "alpine-virt" {
     context = "alpine"
-    tags = ["${NAMESPACE}alpine:${TAG}-virt"]
+    tags = ["${NAMESPACE}alpine-virt:${TAG}"]
     args = {
         FLAVOR = "virt"
     }
