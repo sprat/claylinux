@@ -4,16 +4,11 @@
 # hadolint ignore=DL3006
 FROM alpine AS system
 
-# basic setup:
-# - add the ucode packages
-# - enable passwordless root login
-RUN apk add --no-cache intel-ucode amd-ucode && passwd -d root
-
 # =========================================================
 # Generate the OS image
 # hadolint ignore=DL3006
 FROM builder AS image
-ARG FORMAT=raw
+ARG FORMAT
 RUN --mount=from=system,target=/system build-image --format $FORMAT
 
 # =========================================================
