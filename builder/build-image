@@ -227,7 +227,7 @@ usage=$(cat <<-EOF
 	Usage: $(basename "$0") [OPTIONS ...]
 
 	Options:
-	  -f, --format FORMAT        Output format: raw | iso | files (default: $format)
+	  -f, --format FORMAT        Output format (default: $format)
 	  -o, --output OUTPUT        Output image path/name, without any extension (default: $output)
 	  -r, --root DIR             Directory containing the root filesystem (default: $root_dir)
 	  -v, --volume VOLUME        Volume name/label of the boot partition (default: $volume)
