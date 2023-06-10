@@ -30,32 +30,33 @@ align() {
 
 # build the EFI binary
 build() {
-	local size kernel
+	local size kernel init_img=/usr/share/claylinux/init.img
+
+	pushd "$build_dir" >/dev/null
 
 	echo "Generating the initramfs"
-	pushd "$root_dir" >/dev/null
-	find ./boot -name '*-ucode.img' -print0 | xargs -0 cat >"$build_dir"/initrd
-	find . -path ./boot -prune -o -print0 | sort -z | cpio -0oH newc | compress >>"$build_dir"/initrd
-	size=$(get_size_mib "$build_dir"/initrd)
+	find "$sysroot"/boot -name '*-ucode.img' -print0 | xargs -0 cat >./initrd
+	find "$sysroot" -path "$sysroot"/boot -prune -o -print0 | sort -z | cpio -0oH newc | cat $init_img - | compress >>./initrd
+	size=$(get_size_mib ./initrd)
 	echo "The size of the initramfs is: $size MiB"
-	popd >/dev/null
 
 	echo "Building the EFI executable"
-	pushd "$build_dir" >/dev/null
-	kernel=$(find "$root_dir"/boot -name 'vmlinu*' -print)
-	space_separated <"$root_dir"/boot/cmdline >./cmdline
-	basename "$root_dir"/lib/modules/* >./uname
+	kernel=$(find "$sysroot"/boot -name 'vmlinu*' -print)
+	space_separated <"$sysroot"/boot/cmdline >./cmdline
+	basename "$sysroot"/lib/modules/* >./uname
 
 	# create the EFI UKI file
+	# TODO: add .dtb section on ARM?
 	create_uki <<-EOF
-	.osrel $root_dir/etc/os-release
+	.osrel $sysroot/etc/os-release
 	.uname ./uname
 	.cmdline ./cmdline
 	.initrd ./initrd
 	.linux $kernel
 	EOF
-	# TODO: add .dtb section on ARM?
+
 	rm -rf ./uname ./cmdline ./initrd
+
 	popd >/dev/null
 }
 
@@ -243,7 +244,7 @@ set_format() {
 }
 
 # defaults
-root_dir=/system
+sysroot=/system
 output=/out/claylinux
 format=raw
 volume=CLAYLINUX
@@ -253,10 +254,11 @@ efi_stub="/usr/lib/gummiboot/linux$(efi_arch).efi.stub"
 usage=$(cat <<-EOF
 	Usage: $(basename "$0") [OPTIONS ...]
 
+	Build an OS image from the root filesystem found in $sysroot
+
 	Options:
 	  -f, --format FORMAT        Output format (default: $format)
 	  -o, --output OUTPUT        Output image path/name, without any extension (default: $output)
-	  -r, --root DIR             Directory containing the root filesystem (default: $root_dir)
 	  -v, --volume VOLUME        Volume name/label of the boot partition (default: $volume)
 	  -c, --compression COMP     Compression format for the initramfs: none | gz | xz | zstd (default: $compression)
 
@@ -283,10 +285,6 @@ while [[ "$#" -gt 0 ]]; do
 			output="$2"
 			shift 2
 			;;
-		-r|--root)
-			root_dir="$2"
-			shift 2
-			;;
 		-v|--volume)
 			volume="$2"
 			shift 2
@@ -304,7 +302,7 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 done
 
-[[ -d "$root_dir" ]] || die "the root directory '$root_dir' does not exist"
+[[ -d "$sysroot" ]] || die "the $sysroot directory does not exist, please copy/mount your root filesystem here"
 
 build_dir=$(mktemp -d)
 trap 'rm -rf $build_dir' EXIT

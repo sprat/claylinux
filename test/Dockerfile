@@ -9,7 +9,9 @@ FROM alpine AS system
 # hadolint ignore=DL3006
 FROM builder AS image
 ARG FORMAT
-RUN --mount=from=system,target=/system build-image --format $FORMAT && cp /usr/share/OVMF/OVMF.fd /out
+RUN --mount=from=system,target=/system \
+build-image --format $FORMAT && \
+cp /usr/share/OVMF/OVMF.fd /out
 
 # =========================================================
 # Save the files from the output directory in a new image

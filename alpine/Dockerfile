@@ -21,9 +21,6 @@ RUN \
 apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.*; \
 touch /out/boot/cmdline
 
-# copy our custom init script
-COPY ./init /out
-
 # setup the system
 ARG HOSTNAME="claylinux"
 ARG SYSINIT_SERVICES="devfs dmesg mdev hwdrivers"
