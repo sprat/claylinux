@@ -20,10 +20,8 @@ test() {
 	shift
 
 	case "$format" in
-		files)
-			# shellcheck source=/dev/null
-			source "${name}"/boot.env
-			boot_opts=(-kernel "${name}"/"$KERNEL" -initrd "${name}"/initramfs.img -append "$CMDLINE")
+		efi)
+			boot_opts=(-kernel "${name}.efi")
 			;;
 		raw)
 			boot_opts=(-drive "file=${name}.img,format=raw")
@@ -54,7 +52,7 @@ test() {
 	"$qemu_bin" \
 	-machine q35 \
 	-accel ${accelerator} \
-	-boot d \
+	-bios out/OVMF.fd \
 	-m 2G \
 	-nodefaults \
 	-nographic \
@@ -63,6 +61,11 @@ test() {
 	-device virtio-net,netdev=net \
 	-device virtio-rng \
 	"${boot_opts[@]}"
+	# see https://gitlab.com/qemu-project/qemu/-/issues/513
+	# smm=on
+	# -global driver=cfi.pflash01,property=secure,value=on \
+	# -drive if=pflash,format=raw,unit=0,file=out/OVMF_CODE.fd,readonly=on \
+	# -drive if=pflash,format=raw,unit=1,file=out/OVMF_VARS.fd \
 }
 
 usage() {
