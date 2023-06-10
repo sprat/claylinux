@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/busybox sh
 set -eu
-bb=/bin/busybox
 
+b=/bin/busybox
 # Some programs (e.g. containerd) refuse to work if / is a "rootfs" mount, as in an initramfs.
 # So, we need to copy all the files into a new tmpfs and "switch_root" to it
-$bb mkdir -p /newroot
-$bb mount -t tmpfs root /newroot
-$bb find / -mindepth 1 -maxdepth 1 ! -name newroot -exec $bb cp -at /newroot {} +
-exec $bb switch_root /newroot /sbin/init "$@"
+$b mkdir -p /newroot
+$b mount -t tmpfs root /newroot
+$b find / -mindepth 1 -maxdepth 1 ! -name newroot -exec $b cp -at /newroot {} +
+exec $b switch_root /newroot /sbin/init "$@"
