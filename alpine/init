@@ -1,6 +1,9 @@
 #!/bin/busybox sh
 set -eu
 
+# redirect all outputs to the console
+exec &>/dev/console
+
 b=/bin/busybox
 # Some programs (e.g. containerd) refuse to work if / is a "rootfs" mount, as in an initramfs.
 # So, we need to copy all the files into a new tmpfs and "switch_root" to it
