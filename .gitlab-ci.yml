@@ -2,6 +2,7 @@
 include:
   - project: 'sprat/gitlab-ci'
     file:
+      - '/templates/yamllint.yml'
       - '/templates/shellcheck.yml'
       - '/templates/hadolint.yml'
       - '/templates/docker.yml'
@@ -9,6 +10,9 @@ include:
 stages:
   - validate
   - build
+
+yamllint:
+  extends: .yamllint
 
 shellcheck:
   extends: .shellcheck
@@ -25,4 +29,3 @@ build:
     TAG: ${CI_COMMIT_REF_NAME}
   script:
     - docker buildx bake --push
-
