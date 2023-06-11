@@ -1,58 +1,81 @@
 # claylinux
 
-Claylinux is a toolbox to build OS images using Dockerfiles.
+Claylinux is a set of tools to build Linux bootable images using docker. It can produce raw disk images (`.img`),
+CDROM/ISO images (`.iso`), pure EFI binaries (`.efi`), ...
 
 This project is currently a **WORK IN PROGRESS**.
 
 
-## Development notes
+## Getting Started
+
+The Linux OS building process is the following:
+1. start from a base docker image which contains both the Linux OS filesystem and a Linux kernel. For example, you can
+use the `claylinux/alpine-lts` image which correspond to a [Alpine Linux](https://www.alpinelinux.org/) OS with a
+`linux-lts` kernel.
+2. add software & configuration files to the image using a [Dockerfile](https://docs.docker.com/engine/reference/builder/).
+2. use the `claylinux/builder` image to generate a bootable image from the docker image you just built.
+
+Here is an example of Dockerfile which builds a custom Alpine Linux image with `nginx` installed:
+```dockerfile
+# Initialize the OS
+FROM claylinux/alpine-lts:latest AS system
+RUN apk add --no-cache nginx && rc-update add nginx default
+
+# =========================================================
+# Generate the OS image
+FROM claylinux/builder:latest AS build
+RUN --mount=from=system,target=/system build-image --format raw
+
+# =========================================================
+# Extract the files from the /out directory into a new image
+FROM scratch AS output
+COPY --from=build /out /
+```
+
+Build the OS image with this command:
+```bash
+docker buildx build --output=out .
+```
+
+A `claylinux.img` file is generated into the `out/`  directory, which is a bootable disk image. You can burn this image
+on a USB key or a hard drive using for example [dd](https://www.man7.org/linux/man-pages/man1/dd.1.html) on Linux, or
+[Rufus](https://rufus.ie/fr/) on Microsoft Windows. Then you can boot a machine on this media and use the Linux OS
+you built.
+
+
+## Understanding how the OS works
+
+There are a couple of things to know when using the claylinux tool (and some traps that you can fall into) which are
+detailed here:
+1. The whole operating system will be loaded into RAM and will run from there. So you should keep your image size
+minimal and avoid cluttering your OS filesystem, as it will eat up RAM.
+2. Due to point 1, no firmwares are added by default into the base images since they take much space. So, depending on
+the target machine you'll boot your OS on, you'll have to add some firmwares manually into your image. For Alpine Linux,
+the firmwares are found into the `linux-firmware-*` packages. You can easily identify which firmwares are missing by
+looking for the firmware load errors in the `dmesg` output. Note that no additional firmware is needed for virtual
+machine OSes using the `virt` kernels.
+3. If you need to add big files into your system, you'd better put them on a persistent filesystem that will be
+mounted in `/etc/fstab` instead of putting them into the OS image.
+4. Also, due to point 1, every change you make on the root filesystem will be lost after a reboot. If you need to
+persist some changes, add some mount points to persistent disks in `/etc/fstab` and use them.
+5. The kernel will start your operating system using a minimal `init` script. We don't use the Linux distribution's
+initramfs mechanisms (such as mkinitfs, mkinitramfs, dracut, ...) as they generally require the root filesystem to
+be located on a separated partition/disk. Instead, we bundle everything in a single `.efi` file.
+6. But thanks to 4 and 1, there's only one single `.efi` file to sign for Secure Boot, which contains both the kernel,
+the initramfs and the OS userland filesystem, and which can't be falsified. So it's pretty secure.
+7. Since your OS filesystem is populated inside a docker image build, you should be aware that some files can't be
+changed easily (especially `/etc/hosts`, `/etc/resolv.conf`) because docker mounts these files into the containers that
+executes your Dockerfile commands.
+
+
+## Development
 
 To build the claylinux images, use:
 ```bash
-docker buildx bake
+./clay build
 ```
 
-### Linux boot
-
-The Linux boot process is the following:
-1. The BIOS starts and tries to find a bootable device, respecting the boot order configuration in the BIOS. It looks
-in the MBR part of each bootable device (first 512 bytes) in order to find a bootloader, i.e. a particular signature
-in the MBR.
-2. The first-stage bootloader (from syslinux, grub, ...) tries to find a partition with the `boot` flag. If found, it
-executes the second-stage bootloader found on this partition.
-3. The second-stage bootloader read its configuration (e.g. `syslinux.cfg`) in order to determine the kernel,
-initrd/initramfs and kernel's command-line to use.
-4. The kernel is started, then it runs the `/init` script found in the initramfs
-5. The init script tries to find & mount the final OS root filesystem and `switch_root` on it.
-
-### Alpine Linux init
-
-The Alpine's init script supports multiple boot modes: `diskless`, `data` and `sys`:
-- `sys` correspond to a classical installation on a hard disk, the system configuration persists after a reboot
-- `diskless` is used to run a system fully in RAM from a CD-ROM or USB key. Every change is lost after a reboot. In
-this mode, you can load a custom configuration for the system using a `apkovl` file.
-- `data` is similar to `diskless`, but the `/var` directory is persisted on a user-defined disk.
-
-During the boot, the Alpine's init script tries to find the boot media using the `nlplug-findfs` utility
-(found in the `mkinitfs` package). This utility use the `root` parameter to determine the device containing the root
-filesystem. If no `root` parameter is specified (`diskless` mode), the `nlplug-findfs` tries to find a
-`.boot_repository` file or a `apkovl` file in the block devices. If found, the init script considers it's the
-root filesystem and switch to it.
-
-In the `diskless` mode, the new root filesystem is built by installing either the `apkovl` file found by
-`nlplug-findfs` into it, or some default packages to create a minimal system (case for the Alpine CD). In this mode,
-most drivers are stored in the modloop squashfs file, and there's a boot repository contains some binary packages on
-the CD. Then, the init script `switch_root` on this new filesystem.
-
-The Alpine init script does not seem to support booting a root filesystem stored inside the initramfs: either it
-expects an apkovl overlay file (`diskless` mode), either is expects another device on which the root filesystem is
-stored (`sys` mode).
-
-I am not sure how the `data` mode works, but I guess it's a special case of the `diskless` mode where only the `/var`
-directory is mounted from a storage device.
-
-Here are some interesting links about the Alpine Linux' boot:
-- https://wiki.alpinelinux.org/wiki/Create_a_Bootable_Device
-- https://wiki.alpinelinux.org/wiki/PXE_boot
-- https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper#Upgrading_.22diskless.22_and_.22data.22_disk_mode_installs
-- https://wiki.alpinelinux.org/wiki/Alpine_Source_Map_by_boot_sequence
+You can also create a test OS & launch it on a Qemu virtual machine using the following command:
+```bash
+./clay test
+```
