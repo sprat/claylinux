@@ -3,7 +3,7 @@
 Claylinux is a set of tools to build Linux bootable images using docker. It can produce raw disk images (`.img`),
 CDROM/ISO images (`.iso`), pure EFI binaries (`.efi`), ...
 
-This project is currently a **WORK IN PROGRESS**.
+This project is currently a **WORK IN PROGRESS**, some breaking changes may happen at any time.
 
 
 ## Getting Started
