@@ -7,13 +7,12 @@ FROM alpine AS system
 # =========================================================
 # Generate the OS image
 # hadolint ignore=DL3006
-FROM builder AS image
+FROM builder AS build
 ARG FORMAT
-RUN --mount=from=system,target=/system \
-build-image --format $FORMAT && \
-cp /usr/share/OVMF/OVMF.fd /out
+RUN --mount=from=system,target=/system build-image --format $FORMAT
 
 # =========================================================
 # Save the files from the output directory in a new image
 FROM scratch AS output
-COPY --from=image /out /
+COPY --from=build /usr/share/OVMF/OVMF.fd /
+COPY --from=build /out /
