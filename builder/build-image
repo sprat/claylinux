@@ -90,7 +90,7 @@ create_uki() {
 }
 
 # detect the current EFI architecture
-efi_arch() {
+get_efi_arch() {
 	local machine_arch
 	machine_arch="$(uname -m)"
 	case "$machine_arch" in
@@ -115,11 +115,6 @@ efi_arch() {
 # convert a multi-line input into a space separated list
 space_separated() {
 	paste -d' ' -s
-}
-
-# convert to uppercase
-uppercase() {
-	tr '[:lower:]' '[:upper:]'
 }
 
 # compress the initramfs with the specified scheme
@@ -150,7 +145,7 @@ generate_efi() {
 }
 
 generate_esp() {
-	local efi_arch size
+	local size
 
 	echo "Generating the EFI System Partition (ESP)"
 
@@ -162,16 +157,13 @@ generate_esp() {
 	size=$(in_mib $(( size * 102 / 100 )))
 	echo "The size of the ESP is: $size MiB"
 
-	# get the current EFI architecture
-	efi_arch=$(efi_arch | uppercase)
-
 	# create the FAT32 filesystem
 	mkfs.vfat -n "$volume" -F 32 -C "$esp_file" "$(( size << 10 ))" -v
 
 	# copy the EFI executable into the filesystem
 	mmd -i "$esp_file" ::/EFI
-	mmd -i "$esp_file" ::/EFI/BOOT
-	mcopy -i "$esp_file" "$efi_file" "::/EFI/BOOT/BOOT${efi_arch}.EFI"
+	mmd -i "$esp_file" ::/EFI/boot
+	mcopy -i "$esp_file" "$efi_file" "::/EFI/boot/boot${efi_arch}.efi"
 
 	rm "$efi_file"
 }
@@ -249,7 +241,8 @@ output=/out/claylinux
 format=raw
 volume=CLAYLINUX
 compression=gz
-efi_stub="/usr/lib/gummiboot/linux$(efi_arch).efi.stub"
+efi_arch=$(get_efi_arch)
+efi_stub="/usr/lib/gummiboot/linux${efi_arch}.efi.stub"
 
 usage=$(cat <<-EOF
 	Usage: $(basename "$0") [OPTIONS ...]
