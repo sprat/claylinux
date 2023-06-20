@@ -21,9 +21,7 @@ hadolint:
   extends: .hadolint
 
 build:
-  extends:
-    - .docker
-    - .docker-login-ci
+  extends: .docker
   variables:
     NAMESPACE: ${CI_REGISTRY_IMAGE}/
     TAG: ${CI_COMMIT_REF_NAME}
