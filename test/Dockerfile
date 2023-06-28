@@ -2,12 +2,12 @@
 
 # Setup our custom OS
 # hadolint ignore=DL3006
-FROM alpine AS system
+FROM claylinux/alpine-virt AS system
 
 # =========================================================
 # Generate the OS image
 # hadolint ignore=DL3006
-FROM builder AS build
+FROM claylinux/builder AS build
 ARG FORMAT
 RUN --mount=from=system,target=/system build-image --format $FORMAT
 

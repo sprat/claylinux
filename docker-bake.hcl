@@ -35,8 +35,8 @@ target "alpine-virt" {
 target "test" {
     context = "test"
     contexts = {
-        alpine = "target:alpine-virt"
-        builder = "target:builder"
+        "claylinux/alpine-virt" = "target:alpine-virt"
+        "claylinux/builder" = "target:builder"
     }
     output = ["type=local,dest=out"]
 }
