@@ -3,7 +3,7 @@ variable "REPOSITORY" {
 }
 
 variable "TAG" {
-  default = "latest"
+  default = "dev"
 }
 
 group "default" {
