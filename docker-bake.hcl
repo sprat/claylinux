@@ -12,13 +12,13 @@ group "default" {
 
 target "builder" {
     context = "builder"
-    tags = ["${NAMESPACE}builder:${TAG}"]
+    tags = tag("builder")
 }
 
 # TODO: we should factor the alpine images
 target "alpine-lts" {
     context = "alpine"
-    tags = ["${NAMESPACE}alpine-lts:${TAG}"]
+    tags = tag("alpine-lts")
     args = {
         FLAVOR = "lts"
     }
@@ -26,7 +26,7 @@ target "alpine-lts" {
 
 target "alpine-virt" {
     context = "alpine"
-    tags = ["${NAMESPACE}alpine-virt:${TAG}"]
+    tags = tag("alpine-virt")
     args = {
         FLAVOR = "virt"
     }
@@ -39,4 +39,9 @@ target "test" {
         "claylinux/builder" = "target:builder"
     }
     output = ["type=local,dest=out"]
+}
+
+function "tag" {
+  params = [name]
+  result = ["${NAMESPACE}${name}:${TAG}"]
 }
