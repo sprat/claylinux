@@ -23,7 +23,7 @@ hadolint:
 build:
   extends: .docker
   variables:
-    NAMESPACE: ${CI_REGISTRY_IMAGE}/
+    REPOSITORY: ${CI_REGISTRY_IMAGE}
     TAG: ${CI_COMMIT_REF_NAME}
   script:
     - docker buildx bake --push

@@ -1,5 +1,5 @@
-variable "NAMESPACE" {
-  default = "claylinux/"
+variable "REPOSITORY" {
+  default = "claylinux"
 }
 
 variable "TAG" {
@@ -43,5 +43,5 @@ target "test" {
 
 function "tag" {
   params = [name]
-  result = ["${NAMESPACE}${name}:${TAG}"]
+  result = ["${REPOSITORY}/${name}:${TAG}"]
 }
