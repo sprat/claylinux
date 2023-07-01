@@ -12,6 +12,11 @@ variable "PLATFORMS" {
   default = ""
 }
 
+variable "FORMAT" {
+  # default output format for the test image
+  default = "efi"
+}
+
 group "default" {
   targets = ["builder", "alpine-lts", "alpine-virt"]
 }
@@ -52,7 +57,7 @@ target "test-img" {
     "claylinux/builder" = "target:builder"
   }
   args = {
-    FORMAT = "efi"
+    FORMAT = "${FORMAT}"
   }
   output = ["type=local,dest=out"]
 }
