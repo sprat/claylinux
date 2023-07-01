@@ -72,10 +72,11 @@ executes your Dockerfile commands.
 
 To build the claylinux images, use:
 ```bash
-./clay build
+docker buildx bake
 ```
 
-You can also create a test OS & launch it on a Qemu virtual machine using the following command:
+You can also build a test OS & launch it on a qemu virtual machine using the following command:
 ```bash
-./clay test
+./runtest $format
 ```
+where `$format` is one of the supported builder formats
