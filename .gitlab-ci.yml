@@ -23,7 +23,9 @@ hadolint:
 build:
   extends: .docker
   variables:
+    PLATFORMS: linux/amd64,linux/arm64
     REPOSITORY: ${CI_REGISTRY_IMAGE}
     TAG: ${CI_COMMIT_REF_NAME}
   script:
+    - docker buildx create --use --bootstrap --platform "$PLATFORMS"
     - docker buildx bake --push
