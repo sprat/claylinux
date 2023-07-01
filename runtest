@@ -14,7 +14,7 @@ fi
 shift
 
 # build the test OS image
-docker buildx bake test --set test.args.FORMAT="$format" "$@"
+docker buildx bake test --set test-img.args.FORMAT="$format" "$@"
 
 name=out/claylinux
 case "$format" in

@@ -16,6 +16,10 @@ group "default" {
   targets = ["builder", "alpine-lts", "alpine-virt"]
 }
 
+group "test" {
+  targets = ["test-img", "efi-firmware"]
+}
+
 target "builder" {
   inherits = ["_image"]
   context = "builder"
@@ -41,12 +45,20 @@ target "alpine-virt" {
   }
 }
 
-target "test" {
-  context = "test"
+target "test-img" {
+  context = "test-img"
   contexts = {
     "claylinux/alpine-virt" = "target:alpine-virt"
     "claylinux/builder" = "target:builder"
   }
+  args = {
+    FORMAT = "efi"
+  }
+  output = ["type=local,dest=out"]
+}
+
+target "efi-firmware" {
+  context = "efi-firmware"
   output = ["type=local,dest=out"]
 }
 
