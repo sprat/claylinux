@@ -1,11 +1,11 @@
 ---
 include:
-  - project: 'sprat/gitlab-ci'
+  - project: sprat/gitlab-ci
     file:
-      - '/templates/yamllint.yml'
-      - '/templates/shellcheck.yml'
-      - '/templates/hadolint.yml'
-      - '/templates/docker.yml'
+      - /templates/yamllint.yml
+      - /templates/shellcheck.yml
+      - /templates/hadolint.yml
+      - /templates/docker.yml
 
 stages:
   - validate
