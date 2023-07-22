@@ -14,7 +14,7 @@ fi
 shift
 
 # build the test OS image
-FORMAT="$format" docker buildx bake test "$@"
+docker buildx bake efi-firmware test-os-"$format" "$@"
 
 name=out/claylinux
 case "$format" in

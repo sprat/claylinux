@@ -12,28 +12,27 @@ variable "PLATFORMS" {
   default = ""
 }
 
-variable "FORMAT" {
-  # default output format for the test image
-  default = "efi"
-}
-
 group "default" {
   targets = ["builder", "alpine-lts", "alpine-virt"]
 }
 
-group "test" {
-  targets = ["test-img", "efi-firmware"]
+group "test-os-all" {
+  targets = ["test-os-efi", "test-os-raw", "test-os-qcow2", "test-os-iso"]
+}
+
+group "all" {
+  targets = ["default", "test-os-all", "efi-firmware"]
 }
 
 target "builder" {
-  inherits = ["_image"]
+  inherits = ["_oci-image"]
   context = "builder"
   tags = tag("builder")
 }
 
 # TODO: we should factor the alpine images
 target "alpine-lts" {
-  inherits = ["_image"]
+  inherits = ["_oci-image"]
   context = "alpine"
   tags = tag("alpine-lts")
   args = {
@@ -42,7 +41,7 @@ target "alpine-lts" {
 }
 
 target "alpine-virt" {
-  inherits = ["_image"]
+  inherits = ["_oci-image"]
   context = "alpine"
   tags = tag("alpine-virt")
   args = {
@@ -50,24 +49,49 @@ target "alpine-virt" {
   }
 }
 
-target "test-img" {
-  context = "test-img"
-  contexts = {
-    "claylinux/alpine-virt" = "target:alpine-virt"
-    "claylinux/builder" = "target:builder"
-  }
-  args = {
-    FORMAT = "${FORMAT}"
-  }
-  output = ["type=local,dest=out"]
-}
-
 target "efi-firmware" {
   context = "efi-firmware"
   output = ["type=local,dest=out"]
 }
 
-target "_image" {
+target "test-os-efi" {
+  inherits = ["_test-os"]
+  args = {
+    FORMAT = "efi"
+  }
+}
+
+target "test-os-raw" {
+  inherits = ["_test-os"]
+  args = {
+    FORMAT = "raw"
+  }
+}
+
+target "test-os-qcow2" {
+  inherits = ["_test-os"]
+  args = {
+    FORMAT = "qcow2"
+  }
+}
+
+target "test-os-iso" {
+  inherits = ["_test-os"]
+  args = {
+    FORMAT = "iso"
+  }
+}
+
+target "_test-os" {
+  context = "test-os"
+  contexts = {
+    "claylinux/alpine-virt" = "target:alpine-virt"
+    "claylinux/builder" = "target:builder"
+  }
+  output = ["type=local,dest=out"]
+}
+
+target "_oci-image" {
   pull = true
   platforms = split(",", "${PLATFORMS}")
 }
