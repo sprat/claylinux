@@ -12,6 +12,30 @@ variable "PLATFORMS" {
   default = ""
 }
 
+group "lint" {
+  targets = ["yamllint", "hadolint", "shellcheck"]
+}
+
+target "shellcheck" {
+  inherits = ["_lint"]
+  target = "shellcheck"
+}
+
+target "hadolint" {
+  inherits = ["_lint"]
+  target = "hadolint"
+}
+
+target "yamllint" {
+  inherits = ["_lint"]
+  target = "yamllint"
+}
+
+target "_lint" {
+  dockerfile = "lint.Dockerfile"
+  output = ["type=cacheonly"]
+}
+
 group "default" {
   targets = ["builder", "alpine-lts", "alpine-virt"]
 }
