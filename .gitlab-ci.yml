@@ -28,4 +28,5 @@ build:
     TAG: ${CI_COMMIT_REF_NAME}
   script:
     - docker buildx create --use --bootstrap --platform "$PLATFORMS"
-    - docker buildx bake --push
+    - docker buildx bake all --push
+    - for EXT in efi img qcow2 iso; do test -f out/claylinux.${EXT}; done
