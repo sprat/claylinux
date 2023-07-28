@@ -1,26 +1,28 @@
 ---
-include:
-  - project: sprat/gitlab-ci
-    file:
-      - /templates/docker.yml
-
 stages:
   - validate
   - build
 
 validate:
-  extends: .docker
   stage: validate
+  image: docker:latest
+  services:
+    - docker:latest
   script:
     - docker buildx bake lint
 
 build:
-  extends: .docker
+  stage: build
+  image: docker:latest
+  services:
+    - docker:latest
   variables:
     PLATFORMS: linux/amd64,linux/arm64
     REPOSITORY: ${CI_REGISTRY_IMAGE}
     TAG: ${CI_COMMIT_REF_NAME}
-  script:
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
     - docker buildx create --use --bootstrap --platform "$PLATFORMS"
+  script:
     - docker buildx bake all --push
     - for EXT in efi img qcow2 iso; do test -f out/claylinux.${EXT}; done
