@@ -3,7 +3,7 @@ variable "REPOSITORY" {
 }
 
 variable "TAG" {
-  default = "dev"
+  default = ""
 }
 
 variable "PLATFORMS" {
@@ -51,14 +51,14 @@ group "all" {
 target "builder" {
   inherits = ["_oci-image"]
   context = "builder"
-  tags = tag("builder")
+  tags = tags("builder")
 }
 
 # TODO: we should factor the alpine images
 target "alpine-lts" {
   inherits = ["_oci-image"]
   context = "alpine"
-  tags = tag("alpine-lts")
+  tags = tags("alpine-lts")
   args = {
     FLAVOR = "lts"
   }
@@ -67,7 +67,7 @@ target "alpine-lts" {
 target "alpine-virt" {
   inherits = ["_oci-image"]
   context = "alpine"
-  tags = tag("alpine-virt")
+  tags = tags("alpine-virt")
   args = {
     FLAVOR = "virt"
   }
@@ -120,7 +120,10 @@ target "_oci-image" {
   platforms = split(",", "${PLATFORMS}")
 }
 
-function "tag" {
+function "tags" {
   params = [name]
-  result = ["${REPOSITORY}/${name}:${TAG}"]
+  result = [
+    "${REPOSITORY}/${name}:latest",
+    notequal(TAG, "") ? "${REPOSITORY}/${name}:${TAG}" : ""
+  ]
 }
