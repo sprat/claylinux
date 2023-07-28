@@ -7,8 +7,7 @@ variable "TAG" {
 }
 
 variable "PLATFORMS" {
-  # comma-separated list of platform, e.g. "linux/amd64,linux/arm64"
-  # leave empty to use the default build platform
+  # comma-separated list of platform, e.g. "linux/amd64,linux/arm64", leave empty to use the default platform
   default = ""
 }
 
@@ -73,6 +72,11 @@ target "alpine-virt" {
   }
 }
 
+target "_oci-image" {
+  pull = true
+  platforms = split(",", "${PLATFORMS}")
+}
+
 target "efi-firmware" {
   context = "efi-firmware"
   output = ["type=local,dest=out"]
@@ -113,11 +117,6 @@ target "_test-os" {
     "claylinux/builder" = "target:builder"
   }
   output = ["type=local,dest=out"]
-}
-
-target "_oci-image" {
-  pull = true
-  platforms = split(",", "${PLATFORMS}")
 }
 
 function "tags" {
