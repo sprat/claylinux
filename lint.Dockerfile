@@ -3,7 +3,7 @@ FROM koalaman/shellcheck-alpine:stable AS shellcheck
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 WORKDIR /src
 RUN --mount=type=bind,target=. \
-shellcheck --version && grep -rlE '^#!/bin/.*sh' . | xargs shellcheck
+shellcheck --version && grep -rlE '^#!/bin/.*sh' ./* | xargs shellcheck
 
 # =========================================================
 FROM hadolint/hadolint:latest-alpine AS hadolint
