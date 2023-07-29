@@ -48,14 +48,14 @@ group "all" {
 }
 
 target "builder" {
-  inherits = ["_oci-image"]
+  inherits = ["_image"]
   context = "builder"
   tags = tags("builder")
 }
 
 # TODO: we should factor the alpine images
 target "alpine-lts" {
-  inherits = ["_oci-image"]
+  inherits = ["_image"]
   context = "alpine"
   tags = tags("alpine-lts")
   args = {
@@ -64,7 +64,7 @@ target "alpine-lts" {
 }
 
 target "alpine-virt" {
-  inherits = ["_oci-image"]
+  inherits = ["_image"]
   context = "alpine"
   tags = tags("alpine-virt")
   args = {
@@ -72,7 +72,7 @@ target "alpine-virt" {
   }
 }
 
-target "_oci-image" {
+target "_image" {
   pull = true
   platforms = split(",", "${PLATFORMS}")
 }
