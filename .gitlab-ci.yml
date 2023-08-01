@@ -1,28 +1,21 @@
 ---
-stages:
-  - validate
-  - build
-
-validate:
-  stage: validate
-  image: docker:latest
-  services:
-    - docker:latest
-  script:
-    - docker buildx bake lint
-
 build:
   stage: build
   image: docker:latest
   services:
-    - docker:latest
+    - name: moby/buildkit:latest
+      alias: buildkitd
+      command: ["--addr", "tcp://0.0.0.0:9000"]
   variables:
-    PLATFORMS: linux/amd64,linux/arm64
     REPOSITORY: ${CI_REGISTRY_IMAGE}
     TAG: ${CI_COMMIT_REF_NAME}
   before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
-    - docker buildx create --use --bootstrap --platform "$PLATFORMS"
+    - docker buildx create --use --driver remote tcp://buildkitd:9000
+    - >
+      printf >~/.docker/config.json '{"auths":{"%s":{"username":"%s","password":"%s"}}}\n'
+      $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD
   script:
-    - docker buildx bake all --push
+    - docker buildx bake lint
+    - docker buildx bake test
     - for EXT in efi img qcow2 iso; do test -f out/claylinux.${EXT}; done
+    - docker buildx bake --push
