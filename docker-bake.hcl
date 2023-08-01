@@ -39,12 +39,8 @@ group "default" {
   targets = ["builder", "alpine-lts", "alpine-virt"]
 }
 
-group "test-os-all" {
+group "test" {
   targets = ["test-os-efi", "test-os-raw", "test-os-qcow2", "test-os-iso"]
-}
-
-group "all" {
-  targets = ["default", "test-os-all", "efi-firmware"]
 }
 
 target "builder" {
