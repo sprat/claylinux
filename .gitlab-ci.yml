@@ -13,4 +13,12 @@ build:
     - docker buildx bake lint
     - docker buildx bake test
     - for EXT in efi img qcow2 iso; do test -f out/claylinux.${EXT}; done
-    - TAG=${CI_COMMIT_TAG} docker buildx bake --push
+    - docker buildx bake $RELEASE_OPTIONS
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        TAG: $CI_COMMIT_TAG
+        RELEASE_OPTIONS: "--push"
