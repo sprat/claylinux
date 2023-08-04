@@ -1,13 +1,11 @@
 # syntax=docker/dockerfile:1
 
 # Setup our custom OS
-# hadolint ignore=DL3006
-FROM claylinux/alpine-virt AS system
+FROM claylinux/alpine-virt:latest AS system
 
 # =========================================================
 # Generate the OS image
-# hadolint ignore=DL3006
-FROM claylinux/builder AS build
+FROM claylinux/builder:latest AS build
 ARG FORMAT
 RUN --mount=from=system,target=/system build-image --format "$FORMAT"
 

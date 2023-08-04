@@ -109,8 +109,8 @@ target "test-os-iso" {
 target "_test-os" {
   context = "test-os"
   contexts = {
-    "claylinux/alpine-virt" = "target:alpine-virt"
-    "claylinux/builder" = "target:builder"
+    "claylinux/alpine-virt:latest" = "target:alpine-virt"
+    "claylinux/builder:latest" = "target:builder"
   }
   output = ["type=local,dest=out"]
 }
