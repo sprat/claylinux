@@ -4,7 +4,7 @@ FROM alpine:latest AS init-image
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 WORKDIR /src
 RUN apk fetch --quiet --stdout --no-cache busybox-static | tar -zx --exclude '.*' && mv bin/busybox.static bin/busybox
-COPY init .
+COPY init.sh ./init
 RUN mkdir /out && find . -print0 | cpio -0oH newc >/out/init.img
 
 # =========================================================
@@ -13,6 +13,6 @@ FROM alpine:latest AS builder
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 RUN apk add --no-cache bash binutils dosfstools gummiboot-efistub mtools pigz qemu-img sfdisk xorriso zstd xz
 COPY --from=init-image /out/ /usr/share/claylinux/
-COPY build-image /usr/local/bin/
+COPY build-image.sh /usr/local/bin/build-image
 WORKDIR /out
 ENTRYPOINT ["build-image"]

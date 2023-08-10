@@ -1,9 +1,8 @@
 # syntax=docker/dockerfile:1
 FROM koalaman/shellcheck-alpine:stable AS shellcheck
-SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 WORKDIR /src
 RUN --mount=type=bind,target=. \
-shellcheck --version && grep -rlE '^#!/bin/.*sh' ./* | xargs shellcheck
+shellcheck --version && find . -name '*.sh' -exec shellcheck {} +
 
 # =========================================================
 FROM hadolint/hadolint:latest-alpine AS hadolint

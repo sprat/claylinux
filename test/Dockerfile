@@ -16,7 +16,7 @@ RUN --mount=from=system,target=/system build-image --format "$FORMAT"
 # Generate a qemu image running our custom OS image
 FROM alpine:latest AS vm
 RUN apk add --no-cache bash qemu-system-x86_64 ovmf
-COPY run-vm /usr/local/bin/run-vm
+COPY run-vm.sh /usr/local/bin/run-vm
 ENTRYPOINT ["/usr/local/bin/run-vm"]
 COPY --from=build /out /out
 ENV FORMAT="$FORMAT"
