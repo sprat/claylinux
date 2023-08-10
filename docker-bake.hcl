@@ -40,7 +40,11 @@ group "default" {
 }
 
 group "test" {
-  targets = ["test-os-efi", "test-os-raw", "test-os-qcow2", "test-os-iso"]
+  targets = ["test-efi", "test-raw", "test-qcow2", "test-iso"]
+}
+
+group "all" {
+  targets = ["lint", "default", "test", "vm"]
 }
 
 target "builder" {
@@ -73,46 +77,48 @@ target "_image" {
   platforms = split(",", "${PLATFORMS}")
 }
 
-target "efi-firmware" {
-  context = "efi-firmware"
-  output = ["type=local,dest=out"]
-}
-
-target "test-os-efi" {
-  inherits = ["_test-os"]
+target "test-efi" {
+  inherits = ["_test"]
   args = {
     FORMAT = "efi"
   }
 }
 
-target "test-os-raw" {
-  inherits = ["_test-os"]
+target "test-raw" {
+  inherits = ["_test"]
   args = {
     FORMAT = "raw"
   }
 }
 
-target "test-os-qcow2" {
-  inherits = ["_test-os"]
+target "test-qcow2" {
+  inherits = ["_test"]
   args = {
     FORMAT = "qcow2"
   }
 }
 
-target "test-os-iso" {
-  inherits = ["_test-os"]
+target "test-iso" {
+  inherits = ["_test"]
   args = {
     FORMAT = "iso"
   }
 }
 
-target "_test-os" {
-  context = "test-os"
+target "vm" {
+  inherits = ["_test"]
+  target = "vm"
+  output = ["type=image"]
+  tags = tags("vm")
+}
+
+target "_test" {
+  context = "test"
   contexts = {
-    "claylinux/alpine-virt:latest" = "target:alpine-virt"
-    "claylinux/builder:latest" = "target:builder"
+    "alpine-virt" = "target:alpine-virt"
+    "builder" = "target:builder"
   }
-  output = ["type=local,dest=out"]
+  output = ["type=cacheonly"]
 }
 
 function "tags" {

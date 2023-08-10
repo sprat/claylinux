@@ -1,0 +1,19 @@
+---
+# Use "docker compose run vm" to execute the VM, not "docker compose up"
+# Otherwise you won't be able to interact with it
+services:
+  vm: &vm
+    image: claylinux/vm
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+  vm-accel:
+    <<: *vm
+    devices:
+      - /dev/kvm
+    command:
+      - -accel
+      - kvm
+      - -cpu
+      - host
