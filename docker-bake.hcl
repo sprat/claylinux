@@ -31,7 +31,7 @@ target "yamllint" {
 }
 
 target "_lint" {
-  dockerfile = "lint.Dockerfile"
+  dockerfile = "lint/Dockerfile"
   output = ["type=cacheonly"]
 }
 

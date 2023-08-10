@@ -9,7 +9,7 @@ shellcheck --version && grep -rlE '^#!/bin/.*sh' ./* | xargs shellcheck
 FROM hadolint/hadolint:latest-alpine AS hadolint
 WORKDIR /src
 RUN --mount=type=bind,target=. \
-hadolint --version && find . -name '*Dockerfile' -exec hadolint {} +
+hadolint --version && find . -name Dockerfile -exec hadolint {} +
 
 # =========================================================
 FROM cytopia/yamllint:alpine AS yamllint
