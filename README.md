@@ -75,8 +75,22 @@ To build the claylinux images, use:
 docker buildx bake
 ```
 
-You can also build a test OS & launch it on a qemu virtual machine using the following command:
+You can run the linters with:
 ```bash
-./runtest $format
+docker buildx bake lint
 ```
-where `$format` is one of the supported builder formats
+
+And run some sanity tests with:
+```bash
+docker buildx bake test
+```
+
+Finally, you can build a test OS & launch it as a qemu VM using the following command:
+```bash
+docker buildx bake vm && docker compose run --rm vm
+```
+
+Or, if you have kvm enabled on your docker host:
+```bash
+docker buildx bake vm && docker compose run --rm vm-accel
+```
