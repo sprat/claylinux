@@ -26,6 +26,7 @@ ARG \
 HOSTNAME="claylinux" \
 CMDLINE="" \
 INITTAB_TTYS="tty1::respawn:/sbin/getty 38400 tty1" \
+NETWORK_INTERFACES="auto lo\niface lo inet loopback\n\nauto eth0\niface eth0 inet dhcp" \
 SYSINIT_SERVICES="devfs dmesg mdev hwdrivers" \
 BOOT_SERVICES="modules sysctl hostname bootmisc syslog networking hwclock" \
 DEFAULT_SERVICES="acpid ntpd" \
@@ -36,7 +37,7 @@ echo "$HOSTNAME" >/out/etc/hostname; \
 printf "%b\n" "$CMDLINE" >/out/boot/cmdline; \
 sed -i -E '/tty/d;/^#/d;/^$/d' /out/etc/inittab; \
 printf "%b\n" "$INITTAB_TTYS" >>/out/etc/inittab; \
-printf "auto lo\niface lo inet loopback\n\nauto eth0\niface eth0 inet dhcp\n" >/out/etc/network/interfaces; \
+printf "%b\n" "$NETWORK_INTERFACES" >/out/etc/network/interfaces; \
 rc_add() { for svc in $2; do ln -s "/etc/init.d/$svc" "/out/etc/runlevels/$1/$svc"; done; }; \
 rc_add sysinit "$SYSINIT_SERVICES"; \
 rc_add boot "$BOOT_SERVICES"; \
