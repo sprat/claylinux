@@ -69,6 +69,11 @@ target "alpine-virt" {
   tags = tags("alpine-virt")
   args = {
     FLAVOR = "virt"
+    CMDLINE = "console=tty0 console=ttyS0"
+    INITTAB_TTYS = <<-EOF
+      tty1::respawn:/sbin/getty 38400 tty1
+      ttyS0::respawn:/sbin/getty -L 0 ttyS0 vt100
+    EOF
   }
 }
 

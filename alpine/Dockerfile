@@ -20,25 +20,28 @@ ARG FLAVOR=lts
 RUN apk fetch --no-cache --quiet --stdout linux-$FLAVOR | tar -xz --directory=/out --exclude=.*
 
 # setup the system
-ARG HOSTNAME="claylinux"
-ARG SYSINIT_SERVICES="devfs dmesg mdev hwdrivers"
-ARG BOOT_SERVICES="modules sysctl hostname bootmisc syslog networking hwclock"
-ARG DEFAULT_SERVICES="acpid ntpd"
-ARG SHUTDOWN_SERVICES="mount-ro killprocs savecache"
+# by default, we remove all the TTYs in inittab, so they should be added back with the INITTAB_TTYS argument
+# e.g. you can use "ttyS0::respawn:/sbin/getty -L 0 ttyS0 vt100" to enable login on the serial console
+ARG \
+HOSTNAME="claylinux" \
+CMDLINE="" \
+INITTAB_TTYS="tty1::respawn:/sbin/getty 38400 tty1" \
+SYSINIT_SERVICES="devfs dmesg mdev hwdrivers" \
+BOOT_SERVICES="modules sysctl hostname bootmisc syslog networking hwclock" \
+DEFAULT_SERVICES="acpid ntpd" \
+SHUTDOWN_SERVICES="mount-ro killprocs savecache"
 
 RUN \
 echo "$HOSTNAME" >/out/etc/hostname; \
+printf "%b\n" "$CMDLINE" >/out/boot/cmdline; \
+sed -i -E '/tty/d;/^#/d;/^$/d' /out/etc/inittab; \
+printf "%b\n" "$INITTAB_TTYS" >>/out/etc/inittab; \
 printf "auto lo\niface lo inet loopback\n\nauto eth0\niface eth0 inet dhcp\n" >/out/etc/network/interfaces; \
-rc_add() { lvl="$1"; shift; for svc; do ln -s "/etc/init.d/$svc" "/out/etc/runlevels/$lvl/$svc"; done; }; \
-rc_add sysinit $SYSINIT_SERVICES; \
-rc_add boot $BOOT_SERVICES; \
-rc_add default $DEFAULT_SERVICES; \
-rc_add shutdown $SHUTDOWN_SERVICES; \
-touch /out/boot/cmdline; \
-if [ "$FLAVOR" = "virt" ]; then \
-  echo "console=tty0 console=ttyS0" >>/out/boot/cmdline; \
-  sed -i '/^#ttyS0/s/^#//g' /out/etc/inittab; \
-fi
+rc_add() { for svc in $2; do ln -s "/etc/init.d/$svc" "/out/etc/runlevels/$1/$svc"; done; }; \
+rc_add sysinit "$SYSINIT_SERVICES"; \
+rc_add boot "$BOOT_SERVICES"; \
+rc_add default "$DEFAULT_SERVICES"; \
+rc_add shutdown "$SHUTDOWN_SERVICES"
 
 # =========================================================
 FROM scratch AS final
