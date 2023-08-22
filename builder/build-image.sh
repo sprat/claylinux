@@ -55,7 +55,7 @@ build() {
 	.linux $kernel
 	EOF
 
-	rm -rf ./uname ./cmdline ./initrd
+	find . ! -name '*.efi' -delete
 
 	popd >/dev/null
 }
