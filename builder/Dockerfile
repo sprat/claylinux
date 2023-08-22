@@ -3,9 +3,9 @@
 FROM alpine:latest AS init-image
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 WORKDIR /src
-RUN apk fetch --quiet --stdout --no-cache busybox-static | tar -zx --exclude '.*' && mv bin/busybox.static bin/busybox
+RUN apk fetch --quiet --stdout --no-cache busybox-static | tar -zx --exclude '.*' && mv bin/busybox.static ./busybox
 COPY init.sh ./init
-RUN mkdir /out && find . -print0 | cpio -0oH newc >/out/init.img
+RUN mkdir /out && printf "init\nbusybox" | cpio -oH newc >/out/init.img
 
 # =========================================================
 # create the builder image whose purpose is to generate OS images
