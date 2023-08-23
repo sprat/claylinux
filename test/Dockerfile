@@ -4,6 +4,7 @@ ARG FORMAT=efi
 # Setup our custom OS
 # hadolint ignore=DL3006
 FROM alpine-virt AS system
+RUN apk add --no-cache intel-ucode
 
 # =========================================================
 # Generate the OS image
