@@ -43,6 +43,14 @@ on a USB key or a hard drive using for example [dd](https://www.man7.org/linux/m
 you built.
 
 
+## Tips
+
+Since the OS image is built using docker, the `/etc/hosts` file is already used by docker to provide the networking to
+the build container, so it can't be used as the `/etc/hosts` file of the target OS. And it's the same for the
+`/etc/resolv.conf` file. So, if you want to change the `/etc/hosts` file in your target OS, please edit the
+`/etc/hosts.target` file, which will be used as `/etc/hosts` in the target OS.
+
+
 ## Understanding how the OS works
 
 There are a couple of things to know when using the claylinux tool (and some traps that you can fall into) which are
@@ -63,9 +71,6 @@ initramfs mechanisms (such as mkinitfs, mkinitramfs, dracut, ...) as they genera
 be located on a separated partition/disk. Instead, we bundle everything in a single `.efi` file.
 6. But thanks to 4 and 1, there's only one single `.efi` file to sign for Secure Boot, which contains both the kernel,
 the initramfs and the OS userland filesystem, and which can't be falsified. So it's pretty secure.
-7. Since your OS filesystem is populated inside a docker image build, you should be aware that some files can't be
-changed easily (especially `/etc/hosts`, `/etc/resolv.conf`) because docker mounts these files into the containers that
-executes your Dockerfile commands.
 
 
 ## Development

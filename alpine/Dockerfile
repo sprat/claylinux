@@ -34,7 +34,8 @@ SHUTDOWN_SERVICES="mount-ro killprocs savecache"
 
 RUN \
 echo "$HOSTNAME" >/out/etc/hostname; \
-printf "127.0.1.1\t%s\n" "$HOSTNAME" >>/out/etc/hosts; \
+mv /out/etc/hosts /out/etc/hosts.target; \
+printf "127.0.1.1\t%s\n" "$HOSTNAME" >>/out/etc/hosts.target; \
 printf "%b\n" "$CMDLINE" >/out/boot/cmdline; \
 sed -i -E '/tty/d;/^#/d;/^$/d' /out/etc/inittab; \
 printf "%b\n" "$INITTAB_TTYS" >>/out/etc/inittab; \

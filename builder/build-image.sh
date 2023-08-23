@@ -30,25 +30,12 @@ align() {
 
 # build the EFI binary
 build() {
-	local size kernel init_img=/usr/local/share/claylinux/init.img
+	local size kernel
 
 	pushd "$build_dir" >/dev/null
 
 	echo "Generating the initramfs"
-
-	# use our pre-built init image and append the system files into it
-	cp "$init_img" initrd.img
-	find /system -path /system/boot -prune -o -print0 \
-	| sort -z \
-	| cut -zc2- \
-	| cpio --quiet -0oAH newc -D / -F initrd.img
-	compress initrd.img
-
-	# build the final initrd by concatenating the ucode images & our initrd image
-	# see https://docs.kernel.org/arch/x86/microcode.html
-	cat /system/boot/*-ucode.img initrd.img >initrd
-	rm initrd.img
-
+	build_initrd
 	size=$(get_size_mib initrd)
 	echo "The size of the initramfs is: $size MiB"
 
@@ -67,9 +54,38 @@ build() {
 	.linux $kernel
 	EOF
 
+	# remove all the temporary files
 	find . ! -name '*.efi' -delete
 
 	popd >/dev/null
+}
+
+build_initrd() {
+	# start from our pre-built init image
+	cp /usr/local/share/claylinux/init.img initrd.img
+
+	# build the final initrd by concatenating the ucode images & our initrd image
+
+	# append the system files into it, except /boot and /etc/hosts.target
+	find /system -path /system/boot -prune -o ! -path /system/etc/hosts.target -print0 \
+	| sort -z \
+	| cut -zc2- \
+	| cpio --quiet -0oAH newc -D / -F initrd.img
+
+	# add /etc/hosts.target as /etc/hosts
+	mkdir -p system/etc
+	cp /system/etc/hosts.target system/etc/hosts
+	echo system/etc/hosts | cpio --quiet -oAH newc -F initrd.img
+
+	# compress the initrd
+	compress initrd.img
+
+	# build the final initrd by concatenating the ucode images & our compressed initrd image
+	# see https://docs.kernel.org/arch/x86/microcode.html
+	cat /system/boot/*-ucode.img initrd.img >initrd
+
+	# clean up
+	rm -rf system initrd.img
 }
 
 # create a Unified Kernel Image from the sections passed in the standard input
