@@ -11,7 +11,21 @@ RUN mkdir /out && printf "init\nbusybox" | cpio -oH newc >/out/init.img
 # create the builder image whose purpose is to generate OS images
 FROM alpine:latest AS builder
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
-RUN apk add --no-cache bash binutils dosfstools gummiboot-efistub mtools pigz qemu-img sfdisk xorriso zstd xz
+RUN apk add --no-cache \
+bash \
+binutils \
+coreutils \
+cpio \
+dosfstools \
+findutils \
+gummiboot-efistub \
+mtools \
+pigz \
+qemu-img \
+sfdisk \
+xorriso \
+zstd \
+xz
 COPY --from=init-image /out/ /usr/share/claylinux/
 COPY build-image.sh /usr/local/bin/build-image
 WORKDIR /out
