@@ -36,7 +36,11 @@ build() {
 
 	echo "Generating the initramfs"
 	find "$sysroot"/boot -name '*-ucode.img' -print0 | xargs -0 cat >./initrd
-	find "$sysroot" -path "$sysroot"/boot -prune -o -print0 | sort -z | cpio -0oH newc | cat $init_img - | compress >>./initrd
+	find "$sysroot" -path "$sysroot"/boot -prune -o -print0 \
+	| sort -z \
+	| cpio -0oH newc \
+	| cat $init_img - \
+	| compress >>./initrd
 	size=$(get_size_mib ./initrd)
 	echo "The size of the initramfs is: $size MiB"
 
