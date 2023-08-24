@@ -35,12 +35,18 @@ build() {
 	pushd "$build_dir" >/dev/null
 
 	echo "Generating the initramfs"
-	find "$sysroot"/boot -name '*-ucode.img' -print0 | xargs -0 cat >./initrd
+
+	# use our pre-built init image and append the system files into it
+	cp "$init_img" ./initrd.img
 	find "$sysroot" -path "$sysroot"/boot -prune -o -print0 \
 	| sort -z \
-	| cpio -0oH newc \
-	| cat $init_img - \
-	| compress >>./initrd
+	| cpio --quiet -0oAH newc -F ./initrd.img
+	compress ./initrd.img
+
+	# build the final initrd by concatenating the ucode images & our initrd image
+	cat "$sysroot"/boot/*-ucode.img ./initrd.img >./initrd
+	rm ./initrd.img
+
 	size=$(get_size_mib ./initrd)
 	echo "The size of the initramfs is: $size MiB"
 
@@ -125,16 +131,18 @@ space_separated() {
 compress() {
 	case "$compression" in
 		none)
-			cat
 			;;
 		gz)
-			pigz -9
+			pigz -9 "$1"
+			mv "$1".gz "$1"
 			;;
 		xz)
-			xz -C crc32 -9 -T0
+			xz -C crc32 -9 -T0 "$1"
+			mv "$1".xz "$1"
 			;;
 		zstd)
-			zstd -19 -T0
+			zstd -19 -T0 --rm "$1"
+			mv "$1".zstd "$1"
 			;;
 		*)
 			die "invalid compression scheme '$compression'"
