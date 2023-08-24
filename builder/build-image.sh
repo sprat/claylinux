@@ -38,9 +38,13 @@ build() {
 
 	# use our pre-built init image and append the system files into it
 	cp "$init_img" ./initrd.img
-	find "$sysroot" -path "$sysroot"/boot -prune -o -print0 \
-	| sort -z \
-	| cpio --quiet -0oAH newc -F ./initrd.img
+	(
+		cd / && \
+		find "$sysroot" -path "$sysroot"/boot -prune -o -print0 \
+		| sort -z \
+		| cut -zc2- \
+		| cpio --quiet -0oAH newc -F "$build_dir"/initrd.img
+	)
 	compress ./initrd.img
 
 	# build the final initrd by concatenating the ucode images & our initrd image
