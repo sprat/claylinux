@@ -20,7 +20,8 @@ RUN --mount=source=init.sh,target=/src/init \
 initfs=/tmp/initfs; \
 data=/usr/local/share/claylinux; \
 mkdir -p "$initfs" "$data"; \
-apk fetch --quiet --stdout --no-cache busybox-static | tar -zx bin/busybox.static >"$initfs"/busybox; \
+apk fetch --quiet --stdout --no-cache busybox-static | tar -zxO bin/busybox.static >"$initfs"/busybox; \
+chmod +x "$initfs"/busybox; \
 cp /src/init "$initfs"/init; \
 find "$initfs" -printf '%P\n' | grep -v '^$' | cpio --quiet -D "$initfs" -oH newc >"$data"/init.img; \
 rm -rf "$initfs"
