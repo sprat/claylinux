@@ -30,7 +30,7 @@ align() {
 
 # build the EFI binary
 build() {
-	local size kernel init_img=/usr/share/claylinux/init.img
+	local size kernel init_img=/usr/local/share/claylinux/init.img
 
 	pushd "$build_dir" >/dev/null
 
