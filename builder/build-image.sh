@@ -45,6 +45,7 @@ build() {
 	compress initrd.img
 
 	# build the final initrd by concatenating the ucode images & our initrd image
+	# see https://docs.kernel.org/arch/x86/microcode.html
 	cat /system/boot/*-ucode.img initrd.img >initrd
 	rm initrd.img
 
