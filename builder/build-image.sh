@@ -37,35 +37,32 @@ build() {
 	echo "Generating the initramfs"
 
 	# use our pre-built init image and append the system files into it
-	cp "$init_img" ./initrd.img
-	(
-		cd / && \
-		find "$sysroot" -path "$sysroot"/boot -prune -o -print0 \
-		| sort -z \
-		| cut -zc2- \
-		| cpio --quiet -0oAH newc -F "$build_dir"/initrd.img
-	)
-	compress ./initrd.img
+	cp "$init_img" initrd.img
+	find /system -path /system/boot -prune -o -print0 \
+	| sort -z \
+	| cut -zc2- \
+	| cpio --quiet -0oAH newc -D / -F initrd.img
+	compress initrd.img
 
 	# build the final initrd by concatenating the ucode images & our initrd image
-	cat "$sysroot"/boot/*-ucode.img ./initrd.img >./initrd
-	rm ./initrd.img
+	cat /system/boot/*-ucode.img initrd.img >initrd
+	rm initrd.img
 
-	size=$(get_size_mib ./initrd)
+	size=$(get_size_mib initrd)
 	echo "The size of the initramfs is: $size MiB"
 
 	echo "Building the EFI executable"
-	kernel=$(find "$sysroot"/boot -name 'vmlinu*' -print)
-	space_separated <"$sysroot"/boot/cmdline >./cmdline
-	basename "$sysroot"/lib/modules/* >./uname
+	kernel=$(find /system/boot -name 'vmlinu*' -print)
+	space_separated </system/boot/cmdline >cmdline
+	basename /system/lib/modules/* >kernel-release
 
 	# create the EFI UKI file
 	# TODO: add .dtb section on ARM?
 	create_uki <<-EOF
-	.osrel $sysroot/etc/os-release
-	.uname ./uname
-	.cmdline ./cmdline
-	.initrd ./initrd
+	.osrel /system/etc/os-release
+	.uname kernel-release
+	.cmdline cmdline
+	.initrd initrd
 	.linux $kernel
 	EOF
 
@@ -252,7 +249,6 @@ set_format() {
 }
 
 # defaults
-sysroot=/system
 output=/out/claylinux
 format=raw
 volume=CLAYLINUX
@@ -263,7 +259,7 @@ efi_stub="/usr/lib/gummiboot/linux${efi_arch}.efi.stub"
 usage=$(cat <<-EOF
 	Usage: $(basename "$0") [OPTIONS ...]
 
-	Build an OS image from the root filesystem found in $sysroot
+	Build an OS image from the root filesystem found in /system
 
 	Options:
 	  -f, --format FORMAT        Output format (default: $format)
@@ -311,7 +307,7 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 done
 
-[[ -d "$sysroot" ]] || die "the $sysroot directory does not exist, please copy/mount your root filesystem here"
+[[ -d /system ]] || die "the /system directory does not exist, please copy/mount your root filesystem here"
 
 build_dir=$(mktemp -d)
 trap 'rm -rf $build_dir' EXIT
