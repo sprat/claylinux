@@ -194,6 +194,26 @@ generate_esp() {
 	rm "$efi_file"
 }
 
+# generate an hybrid ISO image
+generate_iso() {
+	generate_esp
+
+	echo "Generating the iso image"
+
+	xorrisofs \
+	-e "$(basename "$esp_file")" \
+	-no-emul-boot \
+	-joliet \
+	-full-iso9660-filenames \
+	-rational-rock \
+	-sysid LINUX \
+	-volid "$volume" \
+	-output "$output".iso \
+	"$esp_file"
+
+	rm "$esp_file"
+}
+
 # generate a raw disk image with a single whole disk FAT32 EFI partition on GPT
 generate_raw() {
 	local disk_file esp_size disk_size
@@ -224,40 +244,41 @@ generate_raw() {
 	rm "$esp_file"
 }
 
-# generate a disk image in qcow2 format
-generate_qcow2() {
+convert_image() {
+	local format="$1"
+
 	generate_raw
 
-	echo "Converting the disk image to qcow2 format"
-	qemu-img convert -f raw -O qcow2 "$output".img "$output".qcow2
+	echo "Converting the disk image to $format format"
+	qemu-img convert -f raw -O "$format" "$output".img "$output"."$format"
 
 	rm "$output".img
 }
 
-# generate an hybrid ISO image
-generate_iso() {
-	generate_esp
+# generate a disk image in qcow2 format
+generate_qcow2() {
+	convert_image qcow2
+}
 
-	echo "Generating the iso image"
+# generate a disk image in vmdk format
+generate_vmdk() {
+	convert_image vmdk
+}
 
-	xorrisofs \
-	-e "$(basename "$esp_file")" \
-	-no-emul-boot \
-	-joliet \
-	-full-iso9660-filenames \
-	-rational-rock \
-	-sysid LINUX \
-	-volid "$volume" \
-	-output "$output".iso \
-	"$esp_file"
+# generate a disk image in vhdx format
+generate_vhdx() {
+	convert_image vhdx
+}
 
-	rm "$esp_file"
+# generate a disk image in vdi format
+generate_vdi() {
+	convert_image vdi
 }
 
 # validate and set the output format
 set_format() {
 	case "$1" in
-		efi|raw|qcow2|iso)
+		efi|iso|raw|qcow2|vmdk|vhdx|vdi)
 			format="$1"
 			;;
 		*)
@@ -287,9 +308,12 @@ usage=$(cat <<-EOF
 
 	Output formats:
 	  - efi: EFI executable (saved as OUTPUT.efi), for use with a custom bootloader or with PXE boot
+	  - iso: ISO9660 CD-ROM image (saved as OUTPUT.iso)
 	  - raw: raw disk image with a single FAT32 boot partition (saved as OUTPUT.img)
 	  - qcow2: disk image in QCOW2 format (saved as OUTPUT.qcow2)
-	  - iso: ISO9660 CD-ROM image (saved as OUTPUT.iso)
+	  - vmdk: disk image in VMDK format (saved as OUTPUT.vmdk)
+	  - vhdx: disk image in VHDX format (saved as OUTPUT.vhdx)
+	  - vdi: disk image in VDI format (saved as OUTPUT.vdi)
 	EOF
 )
 

@@ -45,7 +45,7 @@ group "default" {
 }
 
 group "test" {
-  targets = ["test-efi", "test-raw", "test-qcow2", "test-iso"]
+  targets = ["test-efi", "test-iso", "test-raw", "test-qcow2", "test-vmdk", "test-vhdx", "test-vdi"]
 }
 
 group "all" {
@@ -94,6 +94,13 @@ target "test-efi" {
   }
 }
 
+target "test-iso" {
+  inherits = ["_test"]
+  args = {
+    FORMAT = "iso"
+  }
+}
+
 target "test-raw" {
   inherits = ["_test"]
   args = {
@@ -108,10 +115,24 @@ target "test-qcow2" {
   }
 }
 
-target "test-iso" {
+target "test-vmdk" {
   inherits = ["_test"]
   args = {
-    FORMAT = "iso"
+    FORMAT = "vmdk"
+  }
+}
+
+target "test-vhdx" {
+  inherits = ["_test"]
+  args = {
+    FORMAT = "vhdx"
+  }
+}
+
+target "test-vdi" {
+  inherits = ["_test"]
+  args = {
+    FORMAT = "vdi"
   }
 }
 
