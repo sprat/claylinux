@@ -28,25 +28,23 @@ align() {
 	echo "$(( ($1 + $2 - 1) / $2 * $2 ))"
 }
 
-# build the EFI binary
-build() {
+# build the EFI executable
+build_efi() {
 	local size kernel
 
 	pushd "$build_dir" >/dev/null
 
-	echo "Generating the initramfs"
+	echo "Building the EFI executable"
 	build_initrd
 	size=$(get_size_mib initrd)
 	echo "The size of the initramfs is: $size MiB"
-
-	echo "Building the EFI executable"
 	kernel=$(find /system/boot -name 'vmlinu*' -print)
 	space_separated </system/boot/cmdline >cmdline
 	basename /system/lib/modules/* >kernel-release
 
-	# create the EFI UKI file
+	# build the EFI UKI file
 	# TODO: add .dtb section on ARM?
-	create_uki <<-EOF
+	build_uki <<-EOF
 	.osrel /system/etc/os-release
 	.uname kernel-release
 	.cmdline cmdline
@@ -54,7 +52,7 @@ build() {
 	.linux $kernel
 	EOF
 
-	# remove all the temporary files
+	# delete all the temporary files
 	find . ! -name '*.efi' -delete
 
 	popd >/dev/null
@@ -63,8 +61,6 @@ build() {
 build_initrd() {
 	# start from our pre-built init image
 	cp /usr/local/share/claylinux/init.img initrd.img
-
-	# build the final initrd by concatenating the ucode images & our initrd image
 
 	# append the system files into it, except /boot and /etc/hosts.target
 	find /system -path /system/boot -prune -o ! -path /system/etc/hosts.target -print0 \
@@ -84,12 +80,12 @@ build_initrd() {
 	# see https://docs.kernel.org/arch/x86/microcode.html
 	cat /system/boot/*-ucode.img initrd.img >initrd
 
-	# clean up
-	rm -rf system initrd.img
+	# remove the temporary files
+	find . ! -name initrd -delete
 }
 
 # create a Unified Kernel Image from the sections passed in the standard input
-create_uki() {
+build_uki() {
 	# the initrd section address should be aligned to PAGE_ALIGN(), i.e. 2<<12 == 4096 bytes
 	local args=() alignment=4096 size offset
 
@@ -171,7 +167,7 @@ compress() {
 # just copy the build files to the output directory
 generate_efi() {
 	echo "Copying the OS files to the output directory"
-	cp "$efi_file" "$output".efi
+	mv "$efi_file" "$output".efi
 }
 
 generate_esp() {
@@ -224,6 +220,8 @@ generate_raw() {
 
  	# copy in our partition data into the first partition of the disk image
 	dd if="$esp_file" of="$disk_file" bs=1M seek=1 conv=notrunc status=none
+
+	rm "$esp_file"
 }
 
 # generate a disk image in qcow2 format
@@ -232,6 +230,7 @@ generate_qcow2() {
 
 	echo "Converting the disk image to qcow2 format"
 	qemu-img convert -f raw -O qcow2 "$output".img "$output".qcow2
+
 	rm "$output".img
 }
 
@@ -250,7 +249,9 @@ generate_iso() {
 	-sysid LINUX \
 	-volid "$volume" \
 	-output "$output".iso \
-	"$build_dir"
+	"$esp_file"
+
+	rm "$esp_file"
 }
 
 # validate and set the output format
@@ -327,10 +328,9 @@ done
 [[ -d /system ]] || die "the /system directory does not exist, please copy/mount your root filesystem here"
 
 build_dir=$(mktemp -d)
-trap 'rm -rf $build_dir' EXIT
-
 efi_file="$build_dir"/claylinux.efi
 esp_file="$build_dir"/claylinux.esp
-build
+build_efi
 mkdir -p "$(dirname "$output")"
 generate_"$format"
+rmdir "$build_dir"
