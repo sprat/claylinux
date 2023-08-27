@@ -58,6 +58,7 @@ build_efi() {
 	popd >/dev/null
 }
 
+# build the initramfs
 build_initrd() {
 	# start from our pre-built init image
 	cp /usr/local/share/claylinux/init.img initrd.img
@@ -170,6 +171,7 @@ generate_efi() {
 	mv "$efi_file" "$output".efi
 }
 
+# generate the EFI system partition
 generate_esp() {
 	local size
 
@@ -194,7 +196,7 @@ generate_esp() {
 	rm "$efi_file"
 }
 
-# generate an hybrid ISO image
+# generate an ISO image
 generate_iso() {
 	generate_esp
 
@@ -244,6 +246,7 @@ generate_raw() {
 	rm "$esp_file"
 }
 
+# convert the raw disk image to another format
 convert_image() {
 	local format="$1"
 
