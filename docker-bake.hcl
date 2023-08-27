@@ -11,6 +11,11 @@ variable "PLATFORMS" {
   default = ""
 }
 
+variable "FORMAT" {
+  # default format for the VM output
+  default = "efi"
+}
+
 group "lint" {
   targets = ["yamllint", "hadolint", "shellcheck"]
 }
@@ -114,6 +119,9 @@ target "vm" {
   inherits = ["_test"]
   target = "vm"
   output = ["type=image"]
+  args = {
+    FORMAT = "${FORMAT}"
+  }
   tags = tags("vm")
 }
 

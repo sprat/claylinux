@@ -20,6 +20,7 @@ RUN apk add --no-cache bash qemu-system-x86_64 ovmf
 COPY run-vm.sh /usr/local/bin/run-vm
 ENTRYPOINT ["/usr/local/bin/run-vm"]
 COPY --from=build /out /out
+ARG FORMAT
 ENV FORMAT="$FORMAT"
 
 # =========================================================
