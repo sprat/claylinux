@@ -44,10 +44,6 @@ group "default" {
   targets = ["builder", "alpine-lts", "alpine-virt"]
 }
 
-group "test" {
-  targets = ["test-efi", "test-iso", "test-raw", "test-qcow2", "test-vmdk", "test-vhdx", "test-vdi"]
-}
-
 group "all" {
   targets = ["lint", "default", "test", "vm"]
 }
@@ -88,52 +84,14 @@ target "_image" {
   platforms = split(",", "${PLATFORMS}")
 }
 
-target "test-efi" {
+target "test" {
   inherits = ["_test"]
-  args = {
-    FORMAT = "efi"
+  name = "test-${fmt}"
+  matrix = {
+    fmt = ["efi", "iso", "raw", "qcow2", "vmdk", "vhdx", "vdi"]
   }
-}
-
-target "test-iso" {
-  inherits = ["_test"]
   args = {
-    FORMAT = "iso"
-  }
-}
-
-target "test-raw" {
-  inherits = ["_test"]
-  args = {
-    FORMAT = "raw"
-  }
-}
-
-target "test-qcow2" {
-  inherits = ["_test"]
-  args = {
-    FORMAT = "qcow2"
-  }
-}
-
-target "test-vmdk" {
-  inherits = ["_test"]
-  args = {
-    FORMAT = "vmdk"
-  }
-}
-
-target "test-vhdx" {
-  inherits = ["_test"]
-  args = {
-    FORMAT = "vhdx"
-  }
-}
-
-target "test-vdi" {
-  inherits = ["_test"]
-  args = {
-    FORMAT = "vdi"
+    FORMAT = "${fmt}"
   }
 }
 
