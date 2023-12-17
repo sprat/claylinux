@@ -85,19 +85,27 @@ target "_image" {
 }
 
 target "test" {
-  name = "test-${fmt}"
+  name = "test-${item.target}-${item.format}-${item.ucode}"
   matrix = {
-    fmt = ["efi", "iso", "raw", "qcow2", "vmdk", "vhdx", "vdi"]
+    item = [
+      {format = "efi", ucode="intel", target="alpine-lts"},
+      {format = "iso", ucode="amd", target="alpine-lts"},
+      {format = "raw", ucode="intel", target="alpine-virt"},
+      {format = "qcow2", ucode="none", target="alpine-lts"},
+      {format = "vmdk", ucode="none", target="alpine-virt"},
+      {format = "vhdx", ucode="none", target="alpine-virt"},
+      {format = "vdi", ucode="none", target="alpine-virt"}
+    ]
   }
   context = "test"
-  target = "test"
   output = ["type=cacheonly"]
   contexts = {
-    "alpine-virt" = "target:alpine-virt"
+    "base" = "target:${item.target}"
     "builder" = "target:builder"
   }
   args = {
-    FORMAT = "${fmt}"
+    FORMAT = "${item.format}"
+    UCODE = "${item.ucode}"
   }
 }
 
