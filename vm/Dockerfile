@@ -3,7 +3,6 @@ ARG FORMAT=efi
 
 # hadolint ignore=DL3006
 FROM claylinux/alpine-virt:latest AS system
-RUN apk add --no-cache intel-ucode
 
 # =========================================================
 # Generate the OS image

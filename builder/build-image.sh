@@ -79,7 +79,7 @@ build_initrd() {
 
 	# build the final initrd by concatenating the ucode images & our compressed initrd image
 	# see https://docs.kernel.org/arch/x86/microcode.html
-	cat /system/boot/*-ucode.img initrd.img >initrd
+	echo "$(find /system/boot/ -name '*-ucode.img') initrd.img" | xargs cat >initrd
 
 	# remove the temporary files
 	find . ! -name initrd -delete
