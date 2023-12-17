@@ -5,7 +5,7 @@ set -euo pipefail
 : "${FORMAT:=efi}"
 : "${BIOS:=/usr/share/OVMF/OVMF.fd}"
 
-name=out/claylinux
+name=images/claylinux
 case "$FORMAT" in
       efi)
             boot_opts=(-kernel "${name}.efi")
