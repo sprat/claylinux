@@ -45,7 +45,7 @@ group "default" {
 }
 
 group "all" {
-  targets = ["lint", "default", "test", "vm"]
+  targets = ["lint", "default", "test"]
 }
 
 target "builder" {
@@ -85,34 +85,20 @@ target "_image" {
 }
 
 target "test" {
-  inherits = ["_test"]
   name = "test-${fmt}"
   matrix = {
     fmt = ["efi", "iso", "raw", "qcow2", "vmdk", "vhdx", "vdi"]
   }
-  args = {
-    FORMAT = "${fmt}"
-  }
-}
-
-target "vm" {
-  inherits = ["_test"]
-  target = "vm"
-  output = ["type=image"]
-  args = {
-    FORMAT = "${FORMAT}"
-  }
-  tags = tags("vm")
-}
-
-target "_test" {
   context = "test"
   target = "test"
+  output = ["type=cacheonly"]
   contexts = {
     "alpine-virt" = "target:alpine-virt"
     "builder" = "target:builder"
   }
-  output = ["type=cacheonly"]
+  args = {
+    FORMAT = "${fmt}"
+  }
 }
 
 function "tags" {

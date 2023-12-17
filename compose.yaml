@@ -4,6 +4,11 @@
 services:
   vm: &vm
     image: claylinux/vm
+    pull_policy: build
+    build:
+      context: vm
+      args:
+        FORMAT: ${FORMAT:-efi}
     network_mode: host
     stdin_open: true
     tty: true
