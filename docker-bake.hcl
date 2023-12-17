@@ -149,6 +149,7 @@ target "vm" {
 
 target "_test" {
   context = "test"
+  target = "test"
   contexts = {
     "alpine-virt" = "target:alpine-virt"
     "builder" = "target:builder"
