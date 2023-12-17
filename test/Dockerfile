@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.6.0
 ARG FORMAT=efi
 
 # Setup our custom OS

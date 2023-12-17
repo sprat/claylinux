@@ -1,16 +1,16 @@
-# syntax=docker/dockerfile:1
-FROM koalaman/shellcheck-alpine:stable AS shellcheck
+# syntax=docker/dockerfile:1.6.0
+FROM koalaman/shellcheck-alpine:v0.9.0 AS shellcheck
 WORKDIR /src
 RUN --mount=type=bind,target=. \
 shellcheck --version && find . -name '*.sh' -exec shellcheck {} +
 
 # =========================================================
-FROM hadolint/hadolint:latest-alpine AS hadolint
+FROM hadolint/hadolint:2.12.0-alpine AS hadolint
 WORKDIR /src
 RUN --mount=type=bind,target=. \
 hadolint --version && find . -name Dockerfile -exec hadolint {} +
 
 # =========================================================
-FROM cytopia/yamllint:alpine AS yamllint
+FROM pipelinecomponents/yamllint:0.29.0 AS yamllint
 RUN --mount=type=bind,target=. \
 yamllint -v && yamllint -s -f colored .

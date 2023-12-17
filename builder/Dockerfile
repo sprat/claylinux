@@ -1,5 +1,5 @@
-# syntax=docker/dockerfile:1
-FROM alpine:latest AS builder
+# syntax=docker/dockerfile:1.6.0
+FROM alpine:3.19.0 AS builder
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 RUN apk add --no-cache \
 bash \
