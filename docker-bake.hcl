@@ -83,6 +83,7 @@ target "alpine-virt" {
 }
 
 target "_image" {
+  target = "image"
   pull = true
   platforms = split(",", "${PLATFORMS}")
 }

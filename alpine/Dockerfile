@@ -47,6 +47,6 @@ rc_add default "$DEFAULT_SERVICES"; \
 rc_add shutdown "$SHUTDOWN_SERVICES"
 
 # =========================================================
-FROM scratch AS final
+FROM scratch AS image
 COPY --from=overlay /out /
 ENTRYPOINT ["/bin/sh"]
