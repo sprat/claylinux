@@ -67,8 +67,8 @@ build_initrd() {
 
 	# copy /etc/hosts.target as /etc/hosts
 	if [[ -f /system/etc/hosts.target ]]; then
-		mkdir -p initrd_files/system/etc
-		cp /system/etc/hosts.target initrd_files/system/etc/hosts
+		mkdir -p initrd_files/etc
+		cp /system/etc/hosts.target initrd_files/etc/hosts
 	fi
 
 	# create an initrd with these files
@@ -76,10 +76,8 @@ build_initrd() {
 	| cpio --quiet -o0H newc -D initrd_files -F initrd.img
 
 	# append the system files into the initrd image, except /boot and /etc/hosts.target
-	find /system -path /system/boot -prune -o ! -path /system/etc/hosts.target -mindepth 1 -print0 \
-	| sort -z \
-	| cut -zc2- \
-	| cpio --quiet -o0AH newc -D / -F initrd.img
+	find /system -path /system/boot -prune -o ! -path /system/etc/hosts.target -mindepth 1 -printf '%P\0' \
+	| cpio --quiet -o0AH newc -D /system -F initrd.img
 
 	# compress the initrd
 	compress initrd.img

@@ -10,5 +10,5 @@ exec >/dev/console 2>/dev/console
 b=/busybox.static
 $b mkdir -p /newroot
 $b mount -t tmpfs root /newroot
-$b find /system -mindepth 1 -maxdepth 1 -exec $b mv -t /newroot {} +
+$b find / -path /newroot -prune -o ! -path $b ! -path /init -mindepth 1 -maxdepth 1 -exec $b mv -t /newroot {} +
 exec $b switch_root /newroot /sbin/init "$@"
