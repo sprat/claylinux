@@ -16,15 +16,11 @@ sfdisk \
 xorriso \
 zstd \
 xz
-RUN --mount=source=init.sh,target=/src/init \
-initfs=/tmp/initfs; \
-data=/usr/local/share/claylinux; \
-mkdir -p "$initfs" "$data"; \
-apk fetch --quiet --stdout --no-cache busybox-static | tar -zxO bin/busybox.static >"$initfs"/busybox; \
-chmod +x "$initfs"/busybox; \
-cp /src/init "$initfs"/init; \
-find "$initfs" -printf '%P\n' | grep -v '^$' | cpio --quiet -D "$initfs" -oH newc >"$data"/init.img; \
-rm -rf "$initfs"
-COPY build-image.sh /usr/local/bin/build-image
+RUN \
+mkdir -p /usr/share/claylinux; \
+apk fetch --quiet --stdout --no-cache busybox-static | tar -zxO bin/busybox.static >/usr/share/claylinux/busybox.static; \
+chmod +x /usr/share/claylinux/busybox.static
+COPY init.sh /usr/share/claylinux/init
+COPY build-image.sh /usr/bin/build-image
 WORKDIR /out
 ENTRYPOINT ["build-image"]

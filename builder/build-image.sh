@@ -60,19 +60,26 @@ build_efi() {
 
 # build the initramfs
 build_initrd() {
-	# start from our pre-built init image
-	cp /usr/local/share/claylinux/init.img initrd.img
+	mkdir initrd_files
 
-	# append the system files into it, except /boot and /etc/hosts.target
-	find /system -path /system/boot -prune -o ! -path /system/etc/hosts.target -print0 \
+	# copy the init script and its dependencies
+	cp /usr/share/claylinux/* initrd_files
+
+	# copy /etc/hosts.target as /etc/hosts
+	if [[ -f /system/etc/hosts.target ]]; then
+		mkdir -p initrd_files/system/etc
+		cp /system/etc/hosts.target initrd_files/system/etc/hosts
+	fi
+
+	# create an initrd with these files
+	find initrd_files -mindepth 1 -printf '%P\0' \
+	| cpio --quiet -o0H newc -D initrd_files -F initrd.img
+
+	# append the system files into the initrd image, except /boot and /etc/hosts.target
+	find /system -path /system/boot -prune -o ! -path /system/etc/hosts.target -mindepth 1 -print0 \
 	| sort -z \
 	| cut -zc2- \
-	| cpio --quiet -0oAH newc -D / -F initrd.img
-
-	# add /etc/hosts.target as /etc/hosts
-	mkdir -p system/etc
-	cp /system/etc/hosts.target system/etc/hosts
-	echo system/etc/hosts | cpio --quiet -oAH newc -F initrd.img
+	| cpio --quiet -o0AH newc -D / -F initrd.img
 
 	# compress the initrd
 	compress initrd.img
