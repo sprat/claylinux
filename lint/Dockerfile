@@ -11,6 +11,6 @@ RUN --mount=type=bind,target=. \
 hadolint --version && find . -name Dockerfile -exec hadolint {} +
 
 # =========================================================
-FROM pipelinecomponents/yamllint:0.29.0 AS yamllint
+FROM pipelinecomponents/yamllint:0.30.0 AS yamllint
 RUN --mount=type=bind,target=. \
 yamllint -v && yamllint -s -f colored .
