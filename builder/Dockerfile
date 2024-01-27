@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6.0
-FROM alpine:3.19.0 AS image
+FROM alpine:3.19.1 AS image
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 RUN apk add --no-cache \
 bash \
