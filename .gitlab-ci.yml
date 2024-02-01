@@ -3,7 +3,7 @@ build:
   stage: build
   image: docker:25.0.1
   services:
-    - name: moby/buildkit:v0.12.4
+    - name: moby/buildkit:v0.12.5
       alias: buildkitd
       command: ["--addr", "tcp://0.0.0.0:9000"]
   before_script:
