@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.6.0
+# syntax=docker/dockerfile:1.7.0
 # Generate the OS image
 # hadolint ignore=DL3006
 FROM claylinux/builder:latest AS build
