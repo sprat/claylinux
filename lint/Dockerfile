@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7.0
-FROM koalaman/shellcheck-alpine:v0.9.0 AS shellcheck
+FROM koalaman/shellcheck-alpine:v0.10.0 AS shellcheck
 WORKDIR /src
 RUN --mount=type=bind,target=. \
 shellcheck --version && find . -name '*.sh' -exec shellcheck {} +
