@@ -92,10 +92,10 @@ docker buildx bake test
 
 Finally, you can build a test OS & launch it as a qemu VM using the following command:
 ```bash
-docker buildx bake vm && docker compose run --rm vm
+docker compose run --rm vm
 ```
 
 Or, if you have kvm enabled on your docker host:
 ```bash
-docker buildx bake vm && docker compose run --rm vm-accel
+docker compose run --rm vm-accel
 ```
