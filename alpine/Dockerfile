@@ -7,13 +7,10 @@ SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 
 # install the alpine-base package (for the user space)
 # TODO: or a subset of the packages?
-# Note that we need to delete special files because they are transformed to regular files, which causes various
-# problems. See https://github.com/moby/buildkit/issues/2914 and https://github.com/docker/buildx/issues/1027
 RUN \
 mkdir -p /out/etc; \
 cp -R /etc/apk/ /out/etc/apk/; \
-apk add --no-cache --root /out --initdb alpine-base; \
-rm -rf /out/dev/*
+apk add --no-cache --root /out --initdb alpine-base
 
 # install the kernel (without installing the dependencies)
 ARG FLAVOR=lts
