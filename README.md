@@ -90,12 +90,12 @@ And run some sanity tests with:
 docker buildx bake test
 ```
 
-Finally, you can build a test OS & launch it as a qemu VM using the following command:
+Finally, you can build a test OS image & launch it in a qemu emulator using the following command:
 ```bash
-docker compose run --rm vm
+docker compose run --rm emulator
 ```
 
 Or, if you have kvm enabled on your docker host:
 ```bash
-docker compose run --rm vm-accel
+docker compose run --rm emulator-accel
 ```

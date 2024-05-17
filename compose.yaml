@@ -1,20 +1,20 @@
 ---
-# Use "docker compose run vm" to execute the VM, not "docker compose up"
+# Use "docker compose run emulator" to execute the VM, not "docker compose up"
 # Otherwise you won't be able to interact with it
 services:
-  vm: &vm
-    image: claylinux/vm
+  emulator: &emulator
+    image: claylinux/emulator
     pull_policy: build
     build:
-      context: vm
+      context: emulator
       args:
         FORMAT: ${FORMAT:-efi}
     network_mode: host
     stdin_open: true
     tty: true
 
-  vm-accel:
-    <<: *vm
+  emulator-accel:
+    <<: *emulator
     devices:
       - /dev/kvm
     command:
