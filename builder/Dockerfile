@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7.1
+# syntax=docker/dockerfile:1.8.0
 FROM alpine:3.20.0 AS image
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 RUN apk add --no-cache \
