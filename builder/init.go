@@ -70,8 +70,8 @@ func relocateRootFS() error {
 }
 
 func main() {
-	const ramfsMagic = 0x858458f6
-	const tmpfsMagic = 0x01021994
+	const ramfsMagic int64 = 0x858458f6
+	const tmpfsMagic int64 = 0x01021994
 	var sfs unix.Statfs_t
 
 	if err := unix.Statfs("/", &sfs); err != nil {
