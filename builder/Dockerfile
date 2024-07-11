@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.8.1
+# syntax=docker/dockerfile:1.9.0
 FROM golang:1.22.5-alpine AS init
 WORKDIR /go/src
 RUN \
