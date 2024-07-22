@@ -7,7 +7,7 @@ RUN --mount=from=claylinux/alpine-virt:latest,target=/system build-image --forma
 
 # =========================================================
 # Generate a qemu image running our custom OS image
-FROM alpine:3.20.1 AS emulator
+FROM alpine:3.20.2 AS emulator
 RUN apk add --no-cache bash qemu-system-x86_64 ovmf
 COPY entrypoint.sh /entrypoint
 ENTRYPOINT ["/entrypoint"]
