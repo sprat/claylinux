@@ -1,7 +1,7 @@
 ---
 build:
   stage: build
-  image: docker:27.0.3
+  image: docker:27.1.0
   services:
     - name: moby/buildkit:v0.15.0
       alias: buildkitd
