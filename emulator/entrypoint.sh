@@ -1,9 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-: "${QEMU_BIN:=qemu-system-x86_64}"
 : "${FORMAT:=efi}"
-: "${BIOS:=/usr/share/OVMF/OVMF.fd}"
 
 name=images/claylinux
 case "$FORMAT" in
@@ -28,9 +26,9 @@ esac
 # - q35 correspond to a modern PC
 # - use the proper accelerator
 # -accel ${accelerator} \
-exec "$QEMU_BIN" \
+exec qemu-system-x86_64 \
 -machine q35 \
--bios "$BIOS" \
+-bios /usr/share/OVMF/OVMF.fd \
 -m 2G \
 -nodefaults \
 -nographic \
