@@ -41,7 +41,7 @@ target "_lint" {
 }
 
 group "default" {
-  targets = ["lint", "builder", "alpine-lts", "alpine-virt"]
+  targets = ["lint", "builder", "alpine-lts", "alpine-edge", "alpine-virt"]
 }
 
 group "all" {
@@ -61,6 +61,15 @@ target "alpine-lts" {
   tags = tags("alpine-lts")
   args = {
     FLAVOR = "lts"
+  }
+}
+
+target "alpine-edge" {
+  inherits = ["_image"]
+  context = "alpine"
+  tags = tags("alpine-edge")
+  args = {
+    FLAVOR = "edge"
   }
 }
 
@@ -92,6 +101,7 @@ target "test" {
       {format = "iso", ucode="amd", target="alpine-lts"},
       {format = "raw", ucode="intel", target="alpine-virt"},
       {format = "qcow2", ucode="none", target="alpine-lts"},
+      {format = "efi", ucode="intel", target="alpine-edge"},
       {format = "vmdk", ucode="none", target="alpine-virt"},
       {format = "vhdx", ucode="none", target="alpine-virt"},
       {format = "vdi", ucode="none", target="alpine-virt"}
