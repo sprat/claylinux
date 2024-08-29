@@ -41,11 +41,11 @@ target "_lint" {
 }
 
 group "default" {
-  targets = ["builder", "alpine-lts", "alpine-virt"]
+  targets = ["lint", "builder", "alpine-lts", "alpine-virt"]
 }
 
 group "all" {
-  targets = ["lint", "default", "test"]
+  targets = ["default", "test", "emulator"]
 }
 
 target "builder" {

@@ -80,11 +80,6 @@ To build the claylinux images, use:
 docker buildx bake
 ```
 
-You can run the linters with:
-```bash
-docker buildx bake lint
-```
-
 And run some sanity tests with:
 ```bash
 docker buildx bake test
