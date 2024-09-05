@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.9.0
-FROM golang:1.23.0-alpine AS init
+FROM golang:1.23.1-alpine AS init
 WORKDIR /go/src
 RUN \
 --mount=source=.,target=. \
