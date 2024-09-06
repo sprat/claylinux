@@ -7,7 +7,7 @@ RUN \
 CGO_ENABLED=0 go build -o /go/bin/init -v --ldflags '-s -w -extldflags=-static'
 
 # =========================================================
-FROM alpine:3.20.2 AS image
+FROM alpine:3.20.3 AS image
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 RUN apk add --no-cache \
 bash \
