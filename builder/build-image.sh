@@ -71,12 +71,22 @@ build_initrd() {
 		cp /system/etc/hosts.target initrd_files/etc/hosts
 	fi
 
+	# copy etc/resolv.conf.target as etc/resolv.conf
+	if [[ -f /system/etc/resolv.conf.target ]]; then
+		mkdir -p initrd_files/etc
+		cp /system/etc/resolv.conf.target initrd_files/etc/resolv.conf
+	fi
+
 	# create an initrd with these files
 	find initrd_files -mindepth 1 -printf '%P\0' \
 	| cpio --quiet -o0H newc -D initrd_files -F initrd.img
 
-	# append the system files into the initrd image, except /boot and /etc/hosts.target
-	find /system -path /system/boot -prune -o ! -path /system/etc/hosts.target -mindepth 1 -printf '%P\0' \
+	# append the system files into the initrd image, except /boot, /etc/hosts.target and /etc/resolv.conf.target
+	find /system \
+	-path /system/boot -prune -o \
+	! -path /system/etc/hosts.target \
+	! -path /system/etc/resolv.conf.target \
+	-mindepth 1 -printf '%P\0' \
 	| cpio --quiet -o0AH newc -D /system -F initrd.img
 
 	# compress the initrd
