@@ -201,7 +201,7 @@ generate_esp() {
 	echo "The size of the ESP is: $size MiB"
 
 	# create the FAT32 filesystem
-	mkfs.vfat -n "$volume" -F 32 -C "$esp_file" "$(( size << 10 ))" -v
+	mkfs.vfat -n "$volume" -F 32 -C "$esp_file" "$(( size << 10 ))" >/dev/null
 
 	# copy the EFI executable into the filesystem
 	mmd -i "$esp_file" ::/EFI
@@ -215,7 +215,7 @@ generate_esp() {
 generate_iso() {
 	generate_esp
 
-	echo "Generating the iso image"
+	echo "Generating the ISO image"
 
 	xorrisofs \
 	-e "$(basename "$esp_file")" \
@@ -226,7 +226,7 @@ generate_iso() {
 	-sysid LINUX \
 	-volid "$volume" \
 	-output "$output".iso \
-	"$esp_file"
+	"$esp_file" 2>/dev/null
 
 	rm "$esp_file"
 }
@@ -249,7 +249,7 @@ generate_raw() {
 	truncate -s ${disk_size}M "$disk_file"
 
 	# add a single full disk partition formatted as FAT32 with LBA
-	sfdisk "$disk_file" <<-EOF
+	sfdisk --quiet "$disk_file" <<-EOF
 	label: gpt
 	first-lba: 34
 	start=1MiB size=${esp_size}MiB name="EFI system partition" type=uefi
