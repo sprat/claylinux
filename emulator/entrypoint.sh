@@ -22,10 +22,12 @@ case "$FORMAT" in
             ;;
 esac
 
-# machine:
-# - q35 correspond to a modern PC
-# - use the proper accelerator
-# -accel ${accelerator} \
+# Use the proper accelerator
+if [ -e /dev/kvm ]; then
+   boot_opts+=(-accel kvm -cpu host)
+fi
+
+# machine: q35 correspond to a modern PC
 exec qemu-system-x86_64 \
 -machine q35 \
 -bios /usr/share/OVMF/OVMF.fd \
