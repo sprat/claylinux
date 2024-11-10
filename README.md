@@ -47,8 +47,9 @@ you built.
 
 Since the OS image is built using docker, the `/etc/hosts` file is already used by docker to provide the networking to
 the build container, so it can't be used as the `/etc/hosts` file of the target OS. And it's the same for the
-`/etc/resolv.conf` file. So, if you want to change the `/etc/hosts` file in your target OS, please edit the
-`/etc/hosts.target` file, which will be used as `/etc/hosts` in the target OS.
+`/etc/resolv.conf` file. So, if you want to change the `/etc/hosts` or `/etc/resolv.conf` file in your target OS,
+please edit the `/etc/hosts.target` or `/etc/resolv.conf.target` file, which will be used as `/etc/hosts` or
+`/etc/resolv.conf` in the target OS.
 
 
 ## Understanding how the OS works
