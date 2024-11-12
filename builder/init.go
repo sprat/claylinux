@@ -8,10 +8,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// See also:
-// - https://stackoverflow.com/questions/51779243/copy-a-folder-in-go
-// - https://github.com/moby/moby/blob/master/daemon/graphdriver/copy/copy.go
-
 func relocateRootFS() error {
 	const newRoot = "/newroot"
 
