@@ -21,11 +21,6 @@ func relocateRootFS() error {
 		return err
 	}
 
-	// set bind propagation to "shared"
-	if err := unix.Mount("", newRoot, "", unix.MS_SHARED, ""); err != nil {
-		return err
-	}
-
 	// copy all the files to the new root
 	options := copy.Options{
 		Skip: func(srcinfo os.FileInfo, src, dest string) (bool, error) { // skip the new root directory
@@ -81,7 +76,6 @@ func main() {
 
 	// Some programs (e.g. runc) refuse to work if the rootfs is a tmpfs or ramfs.
 	// So, we need to copy all the files into a new tmpfs and make it the new rootfs.
-	// We also set the bind propagation to shared since it can be useful to run containers.
 	if sfs.Type == ramfsMagic || sfs.Type == tmpfsMagic {
 		if err := relocateRootFS(); err != nil {
 			log.Fatalf("Cannot relocate rootfs: %v", err)
