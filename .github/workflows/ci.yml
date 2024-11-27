@@ -4,7 +4,7 @@ name: CI
 
 env:
   # renovate: datasource=github-releases depName=docker/buildx
-  BUILDX_VERSION: v0.18.0
+  BUILDX_VERSION: v0.19.1
 
 jobs:
   build:
