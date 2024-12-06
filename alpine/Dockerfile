@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.12.0
-ARG VERSION=3.20.3
+ARG VERSION=3.21.0
 
 # =========================================================
 FROM alpine:$VERSION AS overlay
