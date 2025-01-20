@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.12.1
+# syntax=docker/dockerfile:1.13.0
 ARG VERSION=3.21.2
 
 # =========================================================
