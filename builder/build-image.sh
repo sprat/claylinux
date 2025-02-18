@@ -311,7 +311,7 @@ format=raw
 volume=CLAYLINUX
 compression=gz
 efi_arch=$(get_efi_arch)
-efi_stub="/usr/lib/gummiboot/linux${efi_arch}.efi.stub"
+efi_stub="/usr/lib/systemd/boot/efi/linux${efi_arch}.efi.stub"
 
 usage=$(cat <<-EOF
 	Usage: $(basename "$0") [OPTIONS ...]
