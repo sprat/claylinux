@@ -6,7 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/otiai10/copy v1.14.1
-	golang.org/x/sys v0.31.0
+	golang.org/x/sys v0.32.0
 )
 
 require (
