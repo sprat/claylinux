@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.6.0
+# syntax=docker/dockerfile:1.15.0
 # Setup a custom OS
 # hadolint ignore=DL3006
 FROM base AS system
