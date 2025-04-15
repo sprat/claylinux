@@ -2,7 +2,7 @@
 FROM golang:1.24.2-alpine AS init
 WORKDIR /go/src
 RUN \
---mount=source=.,target=. \
+--mount=source=init,target=. \
 --mount=type=cache,target=/root/.cache/go-build \
 CGO_ENABLED=0 go build -o /go/bin/init -v --ldflags '-s -w -extldflags=-static'
 
