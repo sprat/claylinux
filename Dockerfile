@@ -25,7 +25,10 @@ RUN \
 CGO_ENABLED=0 go build -o /go/bin/init -v --ldflags '-s -w -extldflags=-static'
 
 # =========================================================
-FROM alpine:3.21.3 AS imager
+FROM alpine:3.21.3 AS alpine-base
+
+# =========================================================
+FROM alpine-base AS imager
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 RUN \
 echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" >>/etc/apk/repositories && \
@@ -50,7 +53,7 @@ WORKDIR /out
 ENTRYPOINT ["build-image"]
 
 # =========================================================
-FROM alpine:3.21.3 AS bootable-alpine-rootfs
+FROM alpine-base AS bootable-alpine-rootfs
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 
 # install the alpine-base package (for the user space)
@@ -111,7 +114,7 @@ RUN --mount=from=test-rootfs,target=/system build-image --format "$FORMAT"
 
 # =========================================================
 # Generate a qemu image running our custom OS image
-FROM alpine:3.21.3 AS emulator
+FROM alpine-base AS emulator
 RUN apk add --no-cache bash qemu-system-x86_64 ovmf
 COPY emulator.sh /entrypoint
 ENTRYPOINT ["/entrypoint"]
