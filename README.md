@@ -9,11 +9,10 @@ This project is currently a **WORK IN PROGRESS**, some breaking changes may happ
 ## Getting Started
 
 The Linux OS building process is the following:
-1. start from a base docker image which contains both the Linux OS filesystem and a Linux kernel. For example, you can
-use the `claylinux/alpine-lts` image which correspond to a [Alpine Linux](https://www.alpinelinux.org/) OS with a
-`linux-lts` kernel.
-2. add software & configuration files to the image using a [Dockerfile](https://docs.docker.com/engine/reference/builder/).
-2. use the `claylinux/builder` image to generate a bootable image from the docker image you just built.
+1. start from a base docker image which contains both the Linux OS userspace filesystem and a Linux kernel. For example,
+you can use the `claylinux/alpine-lts` image which correspond to a [Alpine Linux](https://www.alpinelinux.org/) OS with
+a [linux-lts](https://pkgs.alpinelinux.org/package/edge/main/x86_64/linux-lts) kernel.
+2. add software & configuration files to the image using a [Dockerfile](https://docs.docker.com/reference/dockerfile/).
 
 Here is an example of Dockerfile which builds a custom Alpine Linux image with `nginx` installed:
 ```dockerfile
