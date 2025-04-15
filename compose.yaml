@@ -2,7 +2,7 @@
 # Otherwise you won't be able to interact with it
 services:
   emulator:
-    image: claylinux/emulator
+    image: claylinux/emulator:latest
     network_mode: host
     stdin_open: true
     tty: true

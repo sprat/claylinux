@@ -20,6 +20,14 @@ group "lint" {
   targets = ["yamllint", "hadolint", "shellcheck"]
 }
 
+group "default" {
+  targets = ["lint", "builder", "alpine-lts", "alpine-edge", "alpine-virt"]
+}
+
+group "all" {
+  targets = ["default", "test", "emulator"]
+}
+
 target "shellcheck" {
   inherits = ["_lint"]
   target = "shellcheck"
@@ -40,23 +48,15 @@ target "_lint" {
   output = ["type=cacheonly"]
 }
 
-group "default" {
-  targets = ["lint", "builder", "alpine-lts", "alpine-edge", "alpine-virt"]
-}
-
-group "all" {
-  targets = ["default", "test", "emulator"]
-}
-
 target "builder" {
-  inherits = ["_image"]
+  inherits = ["_multiplatform_image"]
   context = "builder"
   tags = tags("builder")
 }
 
 # TODO: we should factor the alpine images
 target "alpine-lts" {
-  inherits = ["_image"]
+  inherits = ["_multiplatform_image"]
   context = "alpine"
   tags = tags("alpine-lts")
   args = {
@@ -65,7 +65,7 @@ target "alpine-lts" {
 }
 
 target "alpine-edge" {
-  inherits = ["_image"]
+  inherits = ["_multiplatform_image"]
   context = "alpine"
   tags = tags("alpine-edge")
   args = {
@@ -74,7 +74,7 @@ target "alpine-edge" {
 }
 
 target "alpine-virt" {
-  inherits = ["_image"]
+  inherits = ["_multiplatform_image"]
   context = "alpine"
   tags = tags("alpine-virt")
   args = {
@@ -87,7 +87,7 @@ target "alpine-virt" {
   }
 }
 
-target "_image" {
+target "_multiplatform_image" {
   target = "image"
   pull = true
   platforms = split(",", "${PLATFORMS}")
@@ -119,8 +119,9 @@ target "test" {
 }
 
 target "emulator" {
-  target = "emulator"
   context = "emulator"
+  target = "image"
+  output = ["type=image"]
   tags = tags("emulator")
   args = {
     FORMAT = "${FORMAT}"
