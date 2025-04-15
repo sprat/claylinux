@@ -98,10 +98,9 @@ target "test" {
   matrix = {
     item = [
       {format = "efi", ucode="intel", target="alpine-lts"},
+      {format = "raw", ucode="intel", target="alpine-edge"},
       {format = "iso", ucode="amd", target="alpine-lts"},
-      {format = "raw", ucode="intel", target="alpine-virt"},
-      {format = "qcow2", ucode="none", target="alpine-lts"},
-      {format = "efi", ucode="intel", target="alpine-edge"},
+      {format = "qcow2", ucode="none", target="alpine-virt"},
       {format = "vmdk", ucode="none", target="alpine-virt"},
       {format = "vhdx", ucode="none", target="alpine-virt"},
       {format = "vdi", ucode="none", target="alpine-virt"}
