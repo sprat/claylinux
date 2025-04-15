@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1.15.0
 # Generate the OS image
 # hadolint ignore=DL3006
-FROM claylinux/builder:latest AS build
+FROM builder AS build
 ARG FORMAT
-RUN --mount=from=claylinux/alpine-virt:latest,target=/system build-image --format "$FORMAT"
+RUN --mount=from=alpine-virt,target=/system build-image --format "$FORMAT"
 
 # =========================================================
 # Generate a qemu image running our custom OS image

@@ -125,6 +125,10 @@ target "emulator" {
   args = {
     FORMAT = "${FORMAT}"
   }
+  contexts = {
+    "builder" = "target:builder"
+    "alpine-virt" = "target:alpine-virt"
+  }
 }
 
 function "tags" {
