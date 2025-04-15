@@ -18,7 +18,8 @@ case "$FORMAT" in
             boot_opts=(-drive "file=${name}.iso,media=cdrom")
             ;;
       *)
-            die "invalid format '$FORMAT'"
+            echo "invalid format '$FORMAT'" >&2
+            exit 1
             ;;
 esac
 
