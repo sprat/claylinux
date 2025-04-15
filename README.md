@@ -22,7 +22,7 @@ RUN apk add --no-cache nginx && rc-update add nginx default
 
 # =========================================================
 # Generate the OS image
-FROM claylinux/builder:latest AS build
+FROM claylinux/imager:latest AS build
 RUN --mount=from=system,target=/system build-image --format raw
 
 # =========================================================
