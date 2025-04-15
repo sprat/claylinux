@@ -35,8 +35,8 @@ build_efi() {
 	pushd "$build_dir" >/dev/null
 
 	echo "Building the EFI executable"
-	build_initrd
-	size=$(get_size_mib initrd)
+	build_initramfs
+	size=$(get_size_mib initramfs)
 	echo "The size of the initramfs is: $size MiB"
 	kernel=$(find /system/boot -name 'vmlinu*' -print)
 	space_separated </system/boot/cmdline >cmdline
@@ -48,7 +48,7 @@ build_efi() {
 	.osrel /system/etc/os-release
 	.uname kernel-release
 	.cmdline cmdline
-	.initrd initrd
+	.initrd initramfs
 	.linux $kernel
 	EOF
 
@@ -59,50 +59,51 @@ build_efi() {
 }
 
 # build the initramfs
-build_initrd() {
-	mkdir initrd_files
+build_initramfs() {
+	mkdir initramfs_files
 
-	# copy the init script and its dependencies
-	cp /usr/share/claylinux/* initrd_files
+	# copy the init script
+	cp /usr/share/claylinux/init initramfs_files
 
 	# copy /etc/hosts.target as /etc/hosts
 	if [[ -f /system/etc/hosts.target ]]; then
-		mkdir -p initrd_files/etc
-		cp /system/etc/hosts.target initrd_files/etc/hosts
+		mkdir -p initramfs_files/etc
+		cp /system/etc/hosts.target initramfs_files/etc/hosts
 	fi
 
 	# copy etc/resolv.conf.target as etc/resolv.conf
 	if [[ -f /system/etc/resolv.conf.target ]]; then
-		mkdir -p initrd_files/etc
-		cp /system/etc/resolv.conf.target initrd_files/etc/resolv.conf
+		mkdir -p initramfs_files/etc
+		cp /system/etc/resolv.conf.target initramfs_files/etc/resolv.conf
 	fi
 
-	# create an initrd with these files
-	find initrd_files -mindepth 1 -printf '%P\0' \
-	| cpio --quiet -o0H newc -D initrd_files -F initrd.img
+	# create an initramfs with these files
+	find initramfs_files -mindepth 1 -printf '%P\0' \
+	| cpio --quiet -o0H newc -D initramfs_files -F initramfs.img
 
-	# append the system files into the initrd image, except /boot, /etc/hosts.target and /etc/resolv.conf.target
+	# append the system files into the initramfs image, except /boot, /etc/hosts.target and /etc/resolv.conf.target
 	find /system \
 	-path /system/boot -prune -o \
+	! -path /system/init \
 	! -path /system/etc/hosts.target \
 	! -path /system/etc/resolv.conf.target \
 	-mindepth 1 -printf '%P\0' \
-	| cpio --quiet -o0AH newc -D /system -F initrd.img
+	| cpio --quiet -o0AH newc -D /system -F initramfs.img
 
-	# compress the initrd
-	compress initrd.img
+	# compress the initramfs
+	compress initramfs.img
 
-	# build the final initrd by concatenating the ucode images & our compressed initrd image
+	# build the final initramfs by concatenating the ucode images & our compressed initramfs image
 	# see https://docs.kernel.org/arch/x86/microcode.html
-	echo "$(find /system/boot/ -name '*-ucode.img') initrd.img" | xargs cat >initrd
+	echo "$(find /system/boot/ -name '*-ucode.img') initramfs.img" | xargs cat >initramfs
 
 	# remove the temporary files
-	find . ! -name initrd -delete
+	find . ! -name initramfs -delete
 }
 
 # create a Unified Kernel Image from the sections passed in the standard input
 build_uki() {
-	# the initrd section address should be aligned to PAGE_ALIGN(), i.e. 2<<12 == 4096 bytes
+	# the sections addresses should be aligned to PAGE_ALIGN(), i.e. 2<<12 == 4096 bytes
 	local args=() alignment=4096 size offset
 
 	# compute the start offset of the new sections
