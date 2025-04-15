@@ -44,20 +44,19 @@ target "yamllint" {
 }
 
 target "_lint" {
-  dockerfile = "lint/Dockerfile"
   output = ["type=cacheonly"]
 }
 
 target "imager" {
   inherits = ["_multiplatform_image"]
-  context = "imager"
+  target = "imager"
   tags = tags("imager")
 }
 
 # TODO: we should factor the alpine images
 target "alpine-lts" {
   inherits = ["_multiplatform_image"]
-  context = "alpine"
+  target = "bootable-alpine"
   tags = tags("alpine-lts")
   args = {
     FLAVOR = "lts"
@@ -66,7 +65,7 @@ target "alpine-lts" {
 
 target "alpine-edge" {
   inherits = ["_multiplatform_image"]
-  context = "alpine"
+  target = "bootable-alpine"
   tags = tags("alpine-edge")
   args = {
     FLAVOR = "edge"
@@ -75,7 +74,7 @@ target "alpine-edge" {
 
 target "alpine-virt" {
   inherits = ["_multiplatform_image"]
-  context = "alpine"
+  target = "bootable-alpine"
   tags = tags("alpine-virt")
   args = {
     FLAVOR = "virt"
@@ -88,47 +87,28 @@ target "alpine-virt" {
 }
 
 target "_multiplatform_image" {
-  target = "image"
-  pull = true
   platforms = split(",", "${PLATFORMS}")
 }
 
 target "test" {
-  name = "test-${item.target}-${item.format}-${item.ucode}"
+  name = "test-${item.flavor}-${item.format}-${item.ucode}"
   matrix = {
     item = [
-      {format = "efi", ucode="intel", target="alpine-lts"},
-      {format = "raw", ucode="intel", target="alpine-edge"},
-      {format = "iso", ucode="amd", target="alpine-lts"},
-      {format = "qcow2", ucode="none", target="alpine-virt"},
-      {format = "vmdk", ucode="none", target="alpine-virt"},
-      {format = "vhdx", ucode="none", target="alpine-virt"},
-      {format = "vdi", ucode="none", target="alpine-virt"}
+      {format = "efi", ucode="intel", flavor="lts"},
+      {format = "raw", ucode="intel", flavor="edge"},
+      {format = "iso", ucode="amd", flavor="lts"},
+      {format = "qcow2", ucode="none", flavor="virt"},
+      {format = "vmdk", ucode="none", flavor="virt"},
+      {format = "vhdx", ucode="none", flavor="virt"},
+      {format = "vdi", ucode="none", flavor="virt"}
     ]
   }
-  context = "test"
+  target = "test"
   output = ["type=cacheonly"]
-  contexts = {
-    "base" = "target:${item.target}"
-    "imager" = "target:imager"
-  }
   args = {
+    FLAVOR = "${item.flavor}"
     FORMAT = "${item.format}"
     UCODE = "${item.ucode}"
-  }
-}
-
-target "emulator" {
-  context = "emulator"
-  target = "image"
-  output = ["type=image"]
-  tags = tags("emulator")
-  args = {
-    FORMAT = "${FORMAT}"
-  }
-  contexts = {
-    "imager" = "target:imager"
-    "alpine-virt" = "target:alpine-virt"
   }
 }
 

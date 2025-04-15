@@ -1,8 +1,16 @@
-# Use "docker compose run emulator" to execute the VM, not "docker compose up"
-# Otherwise you won't be able to interact with it
+# Use "docker compose run --rm emulator" to execute the VM, not "docker compose up", otherwise you won't be able to
+# interact with it
 services:
   emulator:
     image: claylinux/emulator:latest
+    pull_policy: build
+    build:
+      target: emulator
+      args:
+        FORMAT: "${FORMAT:-efi}"
+        FLAVOR: virt
+        CMDLINE: console=ttyS0
+        INITTAB_TTYS: ttyS0::respawn:/sbin/getty -L 0 ttyS0 vt100
     network_mode: host
     stdin_open: true
     tty: true
