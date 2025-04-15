@@ -21,7 +21,7 @@ group "lint" {
 }
 
 group "default" {
-  targets = ["lint", "builder", "alpine-lts", "alpine-edge", "alpine-virt"]
+  targets = ["lint", "imager", "alpine-lts", "alpine-edge", "alpine-virt"]
 }
 
 group "all" {
@@ -48,10 +48,10 @@ target "_lint" {
   output = ["type=cacheonly"]
 }
 
-target "builder" {
+target "imager" {
   inherits = ["_multiplatform_image"]
-  context = "builder"
-  tags = tags("builder")
+  context = "imager"
+  tags = tags("imager")
 }
 
 # TODO: we should factor the alpine images
@@ -110,7 +110,7 @@ target "test" {
   output = ["type=cacheonly"]
   contexts = {
     "base" = "target:${item.target}"
-    "builder" = "target:builder"
+    "imager" = "target:imager"
   }
   args = {
     FORMAT = "${item.format}"
@@ -127,7 +127,7 @@ target "emulator" {
     FORMAT = "${FORMAT}"
   }
   contexts = {
-    "builder" = "target:builder"
+    "imager" = "target:imager"
     "alpine-virt" = "target:alpine-virt"
   }
 }
