@@ -11,16 +11,5 @@ services:
     network_mode: host
     stdin_open: true
     tty: true
-
-  emulator-accel:
-    image: claylinux/emulator-accel
-    pull_policy: build
-    build:
-      context: emulator
-      args:
-        FORMAT: ${FORMAT:-efi}
-    network_mode: host
-    stdin_open: true
-    tty: true
     devices:
       - /dev/kvm
