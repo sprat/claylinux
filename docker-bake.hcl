@@ -12,7 +12,7 @@ variable "PLATFORMS" {
 }
 
 variable "FORMAT" {
-  # default format for the VM output
+  # default format for the emulator output
   default = "efi"
 }
 
@@ -115,6 +115,15 @@ target "test" {
   args = {
     FORMAT = "${item.format}"
     UCODE = "${item.ucode}"
+  }
+}
+
+target "emulator" {
+  target = "emulator"
+  context = "emulator"
+  tags = tags("emulator")
+  args = {
+    FORMAT = "${FORMAT}"
   }
 }
 

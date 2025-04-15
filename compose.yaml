@@ -3,11 +3,6 @@
 services:
   emulator:
     image: claylinux/emulator
-    pull_policy: build
-    build:
-      context: emulator
-      args:
-        FORMAT: ${FORMAT:-efi}
     network_mode: host
     stdin_open: true
     tty: true
