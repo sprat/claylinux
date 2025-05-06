@@ -2,7 +2,7 @@ module init
 
 go 1.23.0
 
-toolchain go1.24.2
+toolchain go1.24.3
 
 require (
 	github.com/otiai10/copy v1.14.1
