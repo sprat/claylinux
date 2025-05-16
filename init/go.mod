@@ -1,8 +1,6 @@
-module init
+module github.com/sprat/claylinux/init
 
-go 1.23.0
-
-toolchain go1.24.3
+go 1.24
 
 require (
 	github.com/otiai10/copy v1.14.1
