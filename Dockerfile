@@ -31,7 +31,7 @@ FROM alpine:3.21.3 AS alpine-base
 FROM alpine-base AS imager
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 RUN \
-echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" >>/etc/apk/repositories && \
+echo "@edge-community https://dl-cdn.alpinelinux.org/alpine/edge/community" >>/etc/apk/repositories && \
 apk add --no-cache \
 bash \
 binutils \
@@ -46,7 +46,7 @@ sfdisk \
 xorriso \
 zstd \
 xz \
-systemd-efistub@testing
+systemd-efistub@edge-community
 COPY --from=init /go/bin/init /usr/share/claylinux/init
 COPY build-image.sh /usr/bin/build-image
 WORKDIR /out
