@@ -25,32 +25,26 @@ RUN \
 CGO_ENABLED=0 go build -o /go/bin/init -v --ldflags '-s -w -extldflags=-static'
 
 # =========================================================
+FROM golang:1.24.5-alpine AS imager-build
+WORKDIR /go/src
+# COPY imager/go.mod imager/go.sum ./
+# RUN go mod download
+COPY imager .
+#COPY --from=init /go/bin/init /usr/share/claylinux/init
+RUN \
+--mount=type=cache,target=/root/.cache/go-build \
+go generate -v ./... && \
+CGO_ENABLED=0 go build -o /go/bin/imager -v --ldflags '-s -w -extldflags=-static'
+
+# =========================================================
 FROM alpine:3.22.1 AS alpine-base
 
 # =========================================================
 FROM alpine-base AS imager
-SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
-RUN \
-echo "@edge-community https://dl-cdn.alpinelinux.org/alpine/edge/community" >>/etc/apk/repositories && \
-apk add --no-cache \
-bash \
-binutils \
-coreutils \
-cpio \
-dosfstools \
-findutils \
-mtools \
-pigz \
-qemu-img \
-sfdisk \
-xorriso \
-zstd \
-xz \
-systemd-efistub@edge-community
-COPY --from=init /go/bin/init /usr/share/claylinux/init
-COPY build-image.sh /usr/bin/build-image
+RUN apk add --no-cache binutils systemd-efistub
+COPY --from=imager-build /go/bin/imager /bin/imager
 WORKDIR /out
-ENTRYPOINT ["build-image"]
+ENTRYPOINT ["/bin/imager"]
 
 # =========================================================
 FROM alpine-base AS bootable-alpine-rootfs
@@ -110,7 +104,7 @@ RUN if [ "$UCODE" != "none" ]; then apk add --no-cache "${UCODE}-ucode"; fi
 # hadolint ignore=DL3006
 FROM imager AS test
 ARG FORMAT=efi
-RUN --mount=from=test-rootfs,target=/system build-image --format "$FORMAT"
+RUN --mount=from=test-rootfs,target=/system /bin/imager --format "$FORMAT"
 
 # =========================================================
 # Generate a qemu image running our custom OS image
