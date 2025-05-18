@@ -66,8 +66,6 @@ func relocateRootFS() error {
 }
 
 func main() {
-	const ramfsMagic int64 = 0x858458f6
-	const tmpfsMagic int64 = 0x01021994
 	var sfs unix.Statfs_t
 
 	if err := unix.Statfs("/", &sfs); err != nil {
@@ -76,7 +74,7 @@ func main() {
 
 	// Some programs (e.g. runc) refuse to work if the rootfs is a tmpfs or ramfs.
 	// So, we need to copy all the files into a new tmpfs and make it the new rootfs.
-	if sfs.Type == ramfsMagic || sfs.Type == tmpfsMagic {
+	if sfs.Type == unix.RAMFS_MAGIC || sfs.Type == unix.TMPFS_MAGIC {
 		if err := relocateRootFS(); err != nil {
 			log.Fatalf("Cannot relocate rootfs: %v", err)
 		}
