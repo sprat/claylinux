@@ -25,7 +25,7 @@ RUN \
 CGO_ENABLED=0 go build -o /go/bin/init -v --ldflags '-s -w -extldflags=-static'
 
 # =========================================================
-FROM alpine:3.21.3 AS alpine-base
+FROM alpine:3.22.0 AS alpine-base
 
 # =========================================================
 FROM alpine-base AS imager
