@@ -17,7 +17,7 @@ RUN --mount=type=bind,target=. \
 yamllint -v && yamllint -s -f colored .
 
 # =========================================================
-FROM golang:1.24.4-alpine AS init
+FROM golang:1.24.5-alpine AS init
 WORKDIR /go/src
 RUN \
 --mount=source=init,target=. \
