@@ -25,32 +25,23 @@ RUN \
 CGO_ENABLED=0 go build -o /go/bin/init -v --ldflags '-s -w -extldflags=-static'
 
 # =========================================================
+FROM golang:1.24.5-alpine AS imager-build
+WORKDIR /go/src
+RUN apk add --no-cache systemd-efistub
+#COPY --from=init /go/bin/init /usr/share/claylinux/init
+RUN \
+--mount=source=imager,target=. \
+--mount=type=cache,target=/root/.cache/go-build \
+CGO_ENABLED=0 go build -o /go/bin/imager -v --ldflags '-s -w -extldflags=-static'
+
+# =========================================================
 FROM alpine:3.22.1 AS alpine-base
 
 # =========================================================
-FROM alpine-base AS imager
-SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
-RUN \
-echo "@edge-community https://dl-cdn.alpinelinux.org/alpine/edge/community" >>/etc/apk/repositories && \
-apk add --no-cache \
-bash \
-binutils \
-coreutils \
-cpio \
-dosfstools \
-findutils \
-mtools \
-pigz \
-qemu-img \
-sfdisk \
-xorriso \
-zstd \
-xz \
-systemd-efistub@edge-community
-COPY --from=init /go/bin/init /usr/share/claylinux/init
-COPY build-image.sh /usr/bin/build-image
+FROM scratch AS imager
+COPY --from=imager-build /go/bin/imager /bin/imager
 WORKDIR /out
-ENTRYPOINT ["build-image"]
+ENTRYPOINT ["/bin/imager"]
 
 # =========================================================
 FROM alpine-base AS bootable-alpine-rootfs
