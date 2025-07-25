@@ -1,135 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# exit with an error message
-die() {
-	echo "Error: $*" >&2
-	exit 1
-}
-
-# get the size of the file in bytes
-get_size() {
-	stat -c %s "$1"
-}
-
-# convert a number of bytes into MiB (i.e. 1024 * 1024 bytes), rounded to the next value
-in_mib() {
-	echo $(( ($1 + (1<<20) - 1) >> 20 ))
-}
-
-# get the size of the file in mibytes
-get_size_mib() {
-	in_mib "$(get_size "$1")"
-}
-
-# round the value given in $1 to the next multiple of the value given in $2
-# e.g. align 9 4 -> 12, align 8 4 -> 8
-align() {
-	echo "$(( ($1 + $2 - 1) / $2 * $2 ))"
-}
-
-# build the EFI executable
-build_efi() {
-	local size kernel
-
-	pushd "$build_dir" >/dev/null
-
-	echo "Building the EFI executable"
-	build_initramfs
-	size=$(get_size_mib initramfs)
-	echo "The size of the initramfs is: $size MiB"
-	kernel=$(find /system/boot -name 'vmlinu*' -print)
-	space_separated </system/boot/cmdline >cmdline
-	basename /system/lib/modules/* >kernel-release
-
-	# build the EFI UKI file
-	# TODO: add .dtb section on ARM?
-	build_uki <<-EOF
-	.osrel /system/etc/os-release
-	.uname kernel-release
-	.cmdline cmdline
-	.initrd initramfs
-	.linux $kernel
-	EOF
-
-	# delete all the temporary files
-	find . ! -name '*.efi' -delete
-
-	popd >/dev/null
-}
-
-# build the initramfs
-build_initramfs() {
-	mkdir initramfs_files
-
-	# copy the init script
-	cp /usr/share/claylinux/init initramfs_files
-
-	# copy /etc/hosts.target as /etc/hosts
-	if [[ -f /system/etc/hosts.target ]]; then
-		mkdir -p initramfs_files/etc
-		cp /system/etc/hosts.target initramfs_files/etc/hosts
-	fi
-
-	# copy etc/resolv.conf.target as etc/resolv.conf
-	if [[ -f /system/etc/resolv.conf.target ]]; then
-		mkdir -p initramfs_files/etc
-		cp /system/etc/resolv.conf.target initramfs_files/etc/resolv.conf
-	fi
-
-	# create an initramfs with these files
-	find initramfs_files -mindepth 1 -printf '%P\0' \
-	| cpio --quiet -o0H newc -D initramfs_files -F initramfs.img
-
-	# append the system files into the initramfs image, except /boot, /etc/hosts.target and /etc/resolv.conf.target
-	find /system \
-	-path /system/boot -prune -o \
-	! -path /system/init \
-	! -path /system/etc/hosts.target \
-	! -path /system/etc/resolv.conf.target \
-	-mindepth 1 -printf '%P\0' \
-	| cpio --quiet -o0AH newc -D /system -F initramfs.img
-
-	# compress the initramfs
-	compress initramfs.img
-
-	# build the final initramfs by concatenating the ucode images & our compressed initramfs image
-	# see https://docs.kernel.org/arch/x86/microcode.html
-	echo "$(find /system/boot/ -name '*-ucode.img') initramfs.img" | xargs cat >initramfs
-
-	# remove the temporary files
-	find . ! -name initramfs -delete
-}
-
-# create a Unified Kernel Image from the sections passed in the standard input
-build_uki() {
-	# the sections addresses should be aligned to PAGE_ALIGN(), i.e. 2<<12 == 4096 bytes
-	local args=() alignment=4096 size offset
-
-	# compute the start offset of the new sections
-	offset="$(objdump -h -w "$efi_stub" | awk 'END { offset=("0x"$4)+0; size=("0x"$3)+0; print offset + size }')"
-	offset=$(align "$offset" $alignment)
-
-	# compute the objcopy arguments
-	while read -r section file
-	do
-		# add the section to the parameters
-		args+=(
-			--add-section
-			"$section=$file"
-			--change-section-vma
-			"$section=$offset"
-		)
-
-		# compute the offset for the next section
-		size="$(get_size "$file")"
-		size=$(align "$size" $alignment)
-		offset=$(( offset + size ))
-	done
-
-	objcopy "${args[@]}" "$efi_stub" "$efi_file"
-}
-
 # detect the current EFI architecture
 get_efi_arch() {
 	local machine_arch
@@ -149,34 +20,6 @@ get_efi_arch() {
 			;;
 		*)
 			die "unsupported architecture: $machine_arch"
-			;;
-	esac
-}
-
-# convert a multi-line input into a space separated list
-space_separated() {
-	paste -d' ' -s
-}
-
-# compress the initramfs with the specified scheme
-compress() {
-	case "$compression" in
-		none)
-			;;
-		gz)
-			pigz -9 "$1"
-			mv "$1".gz "$1"
-			;;
-		xz)
-			xz -C crc32 -9 -T0 "$1"
-			mv "$1".xz "$1"
-			;;
-		zstd)
-			zstd -19 -T0 --rm "$1"
-			mv "$1".zstd "$1"
-			;;
-		*)
-			die "invalid compression scheme '$compression'"
 			;;
 	esac
 }
@@ -312,7 +155,6 @@ format=raw
 volume=CLAYLINUX
 compression=gz
 efi_arch=$(get_efi_arch)
-efi_stub="/usr/lib/systemd/boot/efi/linux${efi_arch}.efi.stub"
 
 usage=$(cat <<-EOF
 	Usage: $(basename "$0") [OPTIONS ...]
@@ -373,7 +215,7 @@ done
 build_dir=$(mktemp -d)
 efi_file="$build_dir"/claylinux.efi
 esp_file="$build_dir"/claylinux.esp
-build_efi
+imager "$build_dir"
 mkdir -p "$(dirname "$output")"
 generate_"$format"
 rmdir "$build_dir"
