@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/otiai10/copy v1.14.1
-	golang.org/x/sys v0.34.0
+	golang.org/x/sys v0.35.0
 )
 
 require (
