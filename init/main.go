@@ -74,7 +74,7 @@ func main() {
 
 	// Some programs (e.g. runc) refuse to work if the rootfs is a tmpfs or ramfs.
 	// So, we need to copy all the files into a new tmpfs and make it the new rootfs.
-	if sfs.Type == unix.RAMFS_MAGIC || sfs.Type == unix.TMPFS_MAGIC {
+	if sfs.Type == int64(unix.RAMFS_MAGIC) || sfs.Type == int64(unix.TMPFS_MAGIC) {
 		if err := relocateRootFS(); err != nil {
 			log.Fatalf("Cannot relocate rootfs: %v", err)
 		}
