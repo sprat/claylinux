@@ -5,7 +5,7 @@ RUN --mount=type=bind,target=. \
 shellcheck --version && find . -name '*.sh' -exec shellcheck {} +
 
 # =========================================================
-FROM hadolint/hadolint:v2.13.1-alpine AS hadolint
+FROM hadolint/hadolint:v2.14.0-alpine AS hadolint
 WORKDIR /src
 RUN --mount=type=bind,target=. \
 hadolint --version && find . -name Dockerfile -exec hadolint {} +
