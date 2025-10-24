@@ -1,16 +1,25 @@
 # claylinux
 
-Claylinux is a set of tools to build Linux bootable images using docker. It can produce raw disk images (`.img`),
-CDROM/ISO images (`.iso`), pure EFI binaries (`.efi`), ...
+Claylinux is a tool to build and install [Bootable Containers](https://containers.github.io/bootable/) images. It
+allows you to build Linux-based operating systems (OS) using [Docker](https://www.docker.com/) or
+[Podman](https://podman.io/) tooling. Then, you can ship your OS images using [OCI](https://opencontainers.org/) image
+registries such as [Docker Hub](https://hub.docker.com/), [GitHub Container Registry](https://ghcr.io),
+[Quay.io](https://quay.io/)... This tool can also produce raw disk images (`.img`), CDROM/ISO images (`.iso`) and
+pure EFI binaries also called
+[Unified Kernel Images](https://uapi-group.org/specifications/specs/unified_kernel_image/) (`.efi`)...
+
+The difference between bootable container images and traditional container images is that bootable images also
+contain a Linux kernel and an init system in addition to the OS user-space. For that purpose, we provide some
+[base images](https://hub.docker.com/u/claylinux) containing all you need to start building your own OS image.
 
 This project is currently a **WORK IN PROGRESS**, some breaking changes may happen at any time.
 
 
 ## Getting Started
 
-The Linux OS building process is the following:
+The process to follow to build an OS is the following:
 1. start from a base docker image which contains both the Linux OS userspace filesystem and a Linux kernel. For example,
-you can use the `claylinux/alpine-lts` image which correspond to a [Alpine Linux](https://www.alpinelinux.org/) OS with
+you can use the `claylinux/alpine-lts` image which correspond to an [Alpine Linux](https://www.alpinelinux.org/) OS with
 a [linux-lts](https://pkgs.alpinelinux.org/package/edge/main/x86_64/linux-lts) kernel.
 2. add software & configuration files to the image using a [Dockerfile](https://docs.docker.com/reference/dockerfile/).
 
