@@ -5,75 +5,74 @@ import (
 	"path/filepath"
 
 	"github.com/sprat/claylinux/imager/efi"
+	"github.com/sprat/claylinux/imager/uki"
 )
 
 // Build the Unified Kernel Image
 func (i Image) buildUKI() (string, error) {
 	stubPath := efi.GetStubPath()
-	peFile, err := NewPEFile(stubPath)
+	stub, err := os.ReadFile(stubPath)
 	if err != nil {
 		return "", err
 	}
+	builder := uki.NewBuilder(stub)
 
 	// cmdline
-	cmdline := i.getCmdline()
-	err = peFile.AddSection(".cmdline", cmdline)
+	cmdline, err := i.getCmdline()
 	if err != nil {
 		return "", err
 	}
+	builder.AddSection(".cmdline", []byte(cmdline))
 
 	// initramfs
+	// TODO: build in memory?
 	initRamFsPath, err := i.buildInitRamFs()
 	if err != nil {
 		return "", err
 	}
-	err = peFile.AddSection(".initrd", initRamFsPath)
+	initRamFs, err := os.ReadFile(initRamFsPath)
 	if err != nil {
 		return "", err
 	}
+	builder.AddSection(".initrd", initRamFs)
 
 	// kernel release
 	kernelRelease, err := i.getKernelRelease()
 	if err != nil {
 		return "", err
 	}
-	kernelReleasePath := filepath.Join(i.BuildDir, "kernel-release")
-	os.WriteFile(kernelReleasePath, []byte(kernelRelease), 0644)
-	err = peFile.AddSection(".uname", kernelReleasePath)
-	if err != nil {
-		return "", err
-	}
+	builder.AddSection(".uname", []byte(kernelRelease))
 
 	// os release
-	osReleasePath := filepath.Join(i.RootFsDir, "etc", "os-release")
-	err = peFile.AddSection(".osrel", osReleasePath)
+	osRelease, err := i.getOSRelease()
 	if err != nil {
 		return "", err
 	}
+	builder.AddSection(".osrel", []byte(osRelease))
 
 	// TODO: include ucode
 	// ucodePath, err := findSingleFile(filepath.Join(i.RootFsDir, "boot", "*-ucode.img"))
-	// peFile.AddSection("".ucode", ucodePath)
-
-	// peFile.AddSection("".dtb", ...)
-	// peFile.AddSection("".splash", ...)
+	// builder.AddSection(".ucode", ucodePath)
+	// builder.AddSection(".dtb", ...)
+	// builder.AddSection(".splash", ...)
 
 	// kernel
 	// Should be the last section because everything after can be overwritten by in-place kernel decompression
-	kernelPath, err := i.findKernel()
+	kernelPath, err := i.findKernelPath()
 	if err != nil {
 		return "", err
 	}
-	err = peFile.AddSection(".linux", kernelPath)
+	kernel, err := os.ReadFile(kernelPath)
+	if err != nil {
+		return "", err
+	}
+	builder.AddSection(".linux", kernel)
+
+	outputPath := filepath.Join(i.BuildDir, "claylinux.efi")
+	err = builder.Write(outputPath)
 	if err != nil {
 		return "", err
 	}
 
-	// run objcopy
-	outputPath := filepath.Join(i.BuildDir, "claylinux.efi")
-	err = peFile.Finalize(outputPath)
-	if err != nil {
-		return "", err
-	}
 	return outputPath, nil
 }
