@@ -2,7 +2,6 @@ package imager
 
 import (
 	_ "embed"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -110,7 +109,8 @@ func addToCpioArchive(writer *cpio.Writer, path string, fileInfo fs.FileInfo, na
 	var err error
 	var data []byte
 
-	fmt.Printf("Adding %s\n", name)
+	// TODO: add to debug log
+	//fmt.Printf("Adding %s\n", name)
 
 	mode := fileInfo.Mode()
 

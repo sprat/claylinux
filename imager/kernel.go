@@ -3,7 +3,7 @@ package imager
 import "path/filepath"
 
 // Find the Linux kernel file in the root filesystem
-func (i Image) findKernel() (string, error) {
+func (i Image) findKernelPath() (string, error) {
 	pattern := filepath.Join(i.RootFsDir, "boot", "vmlinu*")
 	return findSingleFile(pattern)
 }
