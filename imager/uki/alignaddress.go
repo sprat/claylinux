@@ -1,4 +1,4 @@
-package imager
+package uki
 
 func alignAddress(value, alignment uint64) uint64 {
 	offset := alignment - 1

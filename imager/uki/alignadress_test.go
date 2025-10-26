@@ -1,4 +1,4 @@
-package imager
+package uki
 
 import (
 	"testing"
