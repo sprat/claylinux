@@ -19,6 +19,7 @@ yamllint -v && yamllint -s -f colored .
 # =========================================================
 FROM golang:1.25.5-alpine AS imager-build
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
+RUN apk add --no-cache binutils
 WORKDIR /go/src
 COPY imager/go.mod imager/go.sum ./
 RUN go mod download
@@ -34,11 +35,11 @@ FROM alpine:3.23.2 AS alpine-base
 
 # =========================================================
 FROM alpine-base AS imager
-# TODO: bundle objcopy (or use a golang lib) and systemd-efistub into the imager binary
-RUN apk add --no-cache binutils systemd-efistub
-COPY --from=imager-build /go/bin/imager /bin/imager
+# TODO: bundle systemd-efistub into the imager binary
+RUN apk add --no-cache systemd-efistub
+COPY --from=imager-build /go/bin/imager /usr/bin/imager
 WORKDIR /out
-ENTRYPOINT ["/bin/imager"]
+ENTRYPOINT ["/usr/bin/imager"]
 
 # =========================================================
 FROM alpine-base AS bootable-alpine-rootfs
@@ -97,12 +98,12 @@ if [ "$UCODE" != "none" ]; then apk add --no-cache "${UCODE}-ucode"; fi;
 # hadolint ignore=DL3006
 FROM imager AS test
 ARG FORMAT=efi
-RUN --mount=from=test-rootfs,target=/system /bin/imager --format "$FORMAT"
+RUN --mount=from=test-rootfs,target=/system imager --format "$FORMAT"
 
 # =========================================================
 # Generate a qemu image running our custom OS image
 FROM alpine-base AS emulator
-RUN apk add --no-cache bash qemu-system-x86_64 ovmf
+RUN apk add --no-cache bash qemu-system-x86_64 ovmf binutils
 COPY emulator.sh /entrypoint
 COPY --from=test /out /images
 ARG FORMAT
