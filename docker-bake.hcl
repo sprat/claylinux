@@ -21,7 +21,7 @@ group "lint" {
 }
 
 group "default" {
-  targets = ["lint", "imager", "alpine-lts", "alpine-edge", "alpine-virt"]
+  targets = ["lint", "imager", "alpine-lts", "alpine-stable", "alpine-virt"]
 }
 
 group "all" {
@@ -63,12 +63,12 @@ target "alpine-lts" {
   }
 }
 
-target "alpine-edge" {
+target "alpine-stable" {
   inherits = ["_multiplatform_image"]
   target = "bootable-alpine"
-  tags = tags("alpine-edge")
+  tags = tags("alpine-stable")
   args = {
-    FLAVOR = "edge"
+    FLAVOR = "stable"
   }
 }
 
@@ -95,7 +95,7 @@ target "test" {
   matrix = {
     item = [
       {format = "efi", ucode="intel", flavor="lts"},
-      {format = "raw", ucode="intel", flavor="edge"},
+      {format = "raw", ucode="intel", flavor="stable"},
       {format = "iso", ucode="amd", flavor="lts"},
       {format = "qcow2", ucode="none", flavor="virt"},
       {format = "vmdk", ucode="none", flavor="virt"},
