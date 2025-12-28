@@ -17,40 +17,28 @@ RUN --mount=type=bind,target=. \
 yamllint -v && yamllint -s -f colored .
 
 # =========================================================
-FROM golang:1.25.5-alpine AS init
+FROM golang:1.25.5-alpine AS imager-build
+SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 WORKDIR /go/src
+COPY imager/go.mod imager/go.sum ./
+RUN go mod download
+COPY imager .
 RUN \
---mount=source=init,target=. \
 --mount=type=cache,target=/root/.cache/go-build \
-CGO_ENABLED=0 go build -o /go/bin/init -v --ldflags '-s -w -extldflags=-static'
+go generate -v ./...; \
+go test; \
+go build -o /go/bin/imager -v --ldflags "-s -w" cmd/main.go
 
 # =========================================================
 FROM alpine:3.23.2 AS alpine-base
 
 # =========================================================
 FROM alpine-base AS imager
-SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
-RUN \
-echo "@edge-community https://dl-cdn.alpinelinux.org/alpine/edge/community" >>/etc/apk/repositories && \
-apk add --no-cache \
-bash \
-binutils \
-coreutils \
-cpio \
-dosfstools \
-findutils \
-mtools \
-pigz \
-qemu-img \
-sfdisk \
-xorriso \
-zstd \
-xz \
-systemd-efistub@edge-community
-COPY --from=init /go/bin/init /usr/share/claylinux/init
-COPY build-image.sh /usr/bin/build-image
+# TODO: bundle objcopy (or use a golang lib) and systemd-efistub into the imager binary
+RUN apk add --no-cache binutils systemd-efistub
+COPY --from=imager-build /go/bin/imager /bin/imager
 WORKDIR /out
-ENTRYPOINT ["build-image"]
+ENTRYPOINT ["/bin/imager"]
 
 # =========================================================
 FROM alpine-base AS bootable-alpine-rootfs
@@ -109,14 +97,14 @@ if [ "$UCODE" != "none" ]; then apk add --no-cache "${UCODE}-ucode"; fi;
 # hadolint ignore=DL3006
 FROM imager AS test
 ARG FORMAT=efi
-RUN --mount=from=test-rootfs,target=/system build-image --format "$FORMAT"
+RUN --mount=from=test-rootfs,target=/system /bin/imager --format "$FORMAT"
 
 # =========================================================
 # Generate a qemu image running our custom OS image
 FROM alpine-base AS emulator
 RUN apk add --no-cache bash qemu-system-x86_64 ovmf
 COPY emulator.sh /entrypoint
-ENTRYPOINT ["/entrypoint"]
 COPY --from=test /out /images
 ARG FORMAT
 ENV FORMAT="$FORMAT"
+ENTRYPOINT ["/entrypoint"]
