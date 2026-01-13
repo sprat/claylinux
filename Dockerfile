@@ -11,7 +11,7 @@ RUN --mount=type=bind,target=. \
 hadolint --version && find . -name Dockerfile -exec hadolint {} +
 
 # =========================================================
-FROM toolhippie/yamllint:1.37.1 AS yamllint
+FROM toolhippie/yamllint:1.38.0 AS yamllint
 WORKDIR /src
 RUN --mount=type=bind,target=. \
 yamllint -v && yamllint -s -f colored .
