@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.20.0
+# syntax=docker/dockerfile:1.21.0
 FROM koalaman/shellcheck-alpine:v0.11.0 AS shellcheck
 WORKDIR /src
 RUN --mount=type=bind,target=. \
