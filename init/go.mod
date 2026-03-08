@@ -1,10 +1,10 @@
 module github.com/sprat/claylinux/init
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/otiai10/copy v1.14.1
-	golang.org/x/sys v0.41.0
+	golang.org/x/sys v0.42.0
 )
 
 require (
