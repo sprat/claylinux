@@ -2,37 +2,24 @@ name: CI
 
 "on": push
 
-env:
-  # renovate: datasource=github-releases depName=docker/buildx
-  BUILDX_VERSION: v0.30.1
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    environment: ${{ case(github.ref == 'refs/heads/master' || github.ref_type == 'tag', 'release', null) }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-        with:
-          version: ${{ env.BUILDX_VERSION }}
-
-      - name: Login to Docker Hub
+      - uses: actions/checkout@v6
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      # Login only when the DOCKERHUB_USERNAME variable is provided via the job environment
+      - if: vars.DOCKERHUB_USERNAME != null
         uses: docker/login-action@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build
-        uses: docker/bake-action@v7
+      - uses: docker/bake-action@v7
         with:
           targets: all
-          push: ${{ github.ref == 'refs/heads/master' || github.ref_type == 'tag' }}
+          push: ${{ vars.DOCKERHUB_USERNAME != null }}
         env:
           PLATFORMS: linux/amd64,linux/arm64
           TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
