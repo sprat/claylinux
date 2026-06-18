@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ case(github.ref == 'refs/heads/master' || github.ref_type == 'tag', 'release', null) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
       # Login only when the DOCKERHUB_USERNAME variable is provided via the job environment
