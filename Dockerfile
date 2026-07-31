@@ -5,7 +5,7 @@ RUN --mount=type=bind,target=. \
 shellcheck --version && find . -name '*.sh' -exec shellcheck {} +
 
 # =========================================================
-FROM hadolint/hadolint:v2.14.0-alpine AS hadolint
+FROM hadolint/hadolint:v2.15.1-alpine AS hadolint
 WORKDIR /src
 RUN --mount=type=bind,target=. \
 hadolint --version && find . -name Dockerfile -exec hadolint {} +
@@ -53,7 +53,7 @@ WORKDIR /out
 ENTRYPOINT ["build-image"]
 
 # =========================================================
-FROM alpine-base AS bootable-alpine-rootfs
+FROM alpine-base AS bootable-alpine
 SHELL ["/bin/ash", "-euxo", "pipefail", "-c"]
 
 # install the alpine-base package (for the user space)
@@ -91,9 +91,6 @@ rc_add boot "$BOOT_SERVICES"; \
 rc_add default "$DEFAULT_SERVICES"; \
 rc_add shutdown "$SHUTDOWN_SERVICES"
 
-# =========================================================
-FROM scratch AS bootable-alpine
-COPY --from=bootable-alpine-rootfs / /
 ENTRYPOINT ["/bin/sh"]
 
 # =========================================================
